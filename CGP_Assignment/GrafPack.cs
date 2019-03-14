@@ -10,6 +10,7 @@ namespace CGP_Assignment
         private MainMenu mainMenu;
         private bool selectSquareStatus = false;
         private bool selectTriangleStatus = false;
+        private bool selectCircleStatus = false;
 
         private int clicknumber = 0;
         private Point one;
@@ -28,20 +29,25 @@ namespace CGP_Assignment
             MenuItem selectItem = new MenuItem();
             MenuItem squareItem = new MenuItem();
             MenuItem triangleItem = new MenuItem();
+            MenuItem circleItem = new MenuItem();
+
 
             createItem.Text = "&Create";
             squareItem.Text = "&Square";
             triangleItem.Text = "&Triangle";
+            circleItem.Text = "&Circle";
             selectItem.Text = "&Select";
             
             mainMenu.MenuItems.Add(createItem);
             mainMenu.MenuItems.Add(selectItem);
             createItem.MenuItems.Add(squareItem);
             createItem.MenuItems.Add(triangleItem);
+            createItem.MenuItems.Add(circleItem);
 
             selectItem.Click += new System.EventHandler(this.selectShape);
             squareItem.Click += new System.EventHandler(this.selectSquare);
             triangleItem.Click += new System.EventHandler(this.selectTriangle);
+            circleItem.Click += new System.EventHandler(this.selectCircle);
 
             this.Menu = mainMenu;
             this.MouseClick += mouseClick;
@@ -57,6 +63,11 @@ namespace CGP_Assignment
         private void selectTriangle(object sender, EventArgs e)
         {
             selectTriangleStatus = true;
+        }
+
+        private void selectCircle(object sender, EventArgs e)
+        {
+            selectCircleStatus = true;
         }
 
         private void selectShape(object sender, EventArgs e)
@@ -95,51 +106,7 @@ namespace CGP_Assignment
                 }
             }
         }
-    }
-    
-    abstract class Shape
-    {
-        // This is the base class for Shapes in the application. It should allow an array or LL
-        // to be created containing different kinds of shapes.
-        public Shape()   // constructor
-        {            
-        }
-    }
-    
-    class Square : Shape
-    {
-        //This class contains the specific details for a square defined in terms of opposite corners
-        Point keyPt, oppPt;      // these points identify opposite corners of the square
-
-        public Square(Point keyPt, Point oppPt)   // constructor
-        {
-            this.keyPt = keyPt;
-            this.oppPt = oppPt;
-        }
-
-        // You will need a different draw method for each kind of shape. Note the square is drawn
-        // from first principles. All other shapes should similarly be drawn from first principles. 
-        // Ideally no C# standard library class or method should be used to create, draw or transform a shape
-        // and instead should utilse user-developed code.
-	    public void draw(Graphics g, Pen blackPen)
-        {
-            // This method draws the square by calculating the positions of the other 2 corners
-            double xDiff, yDiff, xMid, yMid;   // range and mid points of x & y  
-
-            // calculate ranges and mid points
-            xDiff = oppPt.X - keyPt.X;
-            yDiff = oppPt.Y - keyPt.Y;
-            xMid = (oppPt.X + keyPt.X) / 2;
-            yMid = (oppPt.Y + keyPt.Y) / 2;
-
-            // draw square
-            g.DrawLine(blackPen, (int)keyPt.X, (int)keyPt.Y, (int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2));
-            g.DrawLine(blackPen, (int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2), (int)oppPt.X, (int)oppPt.Y);
-            g.DrawLine(blackPen, (int)oppPt.X, (int)oppPt.Y, (int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2));
-            g.DrawLine(blackPen, (int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2), (int)keyPt.X, (int)keyPt.Y);
-        }
-
-    }
+    }    
 }
 
 
