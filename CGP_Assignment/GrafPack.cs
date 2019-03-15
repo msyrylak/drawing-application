@@ -1,20 +1,31 @@
 ﻿using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
+using System.Collections.Generic;
 
 namespace CGP_Assignment
 {
     public partial class GrafPack : Form
     {
 
+        enum ShapeSelected
+        {
+            NONE,
+            SQUARE,
+            TRIANGLE,
+            CIRCLE
+        }
+
+
         private MainMenu mainMenu;
-        private bool selectSquareStatus = false;
-        private bool selectTriangleStatus = false;
-        private bool selectCircleStatus = false;
+        private ShapeSelected selectedShape = ShapeSelected.NONE;
+        Graphics g;
 
         private int clicknumber = 0;
         private Point one;
         private Point two;
+        private Point mdown;
 
         public GrafPack()
         {
@@ -37,7 +48,7 @@ namespace CGP_Assignment
             triangleItem.Text = "&Triangle";
             circleItem.Text = "&Circle";
             selectItem.Text = "&Select";
-            
+
             mainMenu.MenuItems.Add(createItem);
             mainMenu.MenuItems.Add(selectItem);
             createItem.MenuItems.Add(squareItem);
@@ -56,18 +67,18 @@ namespace CGP_Assignment
         // Generally, all methods of the form are usually private
         private void selectSquare(object sender, EventArgs e)
         {
-            selectSquareStatus = true;
-            MessageBox.Show("Click OK and then click once each at two locations to create a square");
+            selectedShape = ShapeSelected.SQUARE;
+            MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a square.");
         }
 
         private void selectTriangle(object sender, EventArgs e)
         {
-            selectTriangleStatus = true;
+            selectedShape = ShapeSelected.TRIANGLE;
         }
 
         private void selectCircle(object sender, EventArgs e)
         {
-            selectCircleStatus = true;
+            selectedShape = ShapeSelected.CIRCLE;
         }
 
         private void selectShape(object sender, EventArgs e)
@@ -79,34 +90,57 @@ namespace CGP_Assignment
         // to be implemented to detect other kinds of event handling eg keyboard presses.
         private void mouseClick(object sender, MouseEventArgs e)
         {
+
+
+        }
+
+        // draw shapes using rubber banding
+        protected override void OnMouseMove(MouseEventArgs e)
+        {
+            base.OnMouseMove(e);
             if (e.Button == MouseButtons.Left)
             {
-                // 'if' statements can distinguish different selected menu operations to implement.
-                // There may be other (better, more efficient) approaches to event handling,
-                // but this approach works.
-                if (selectSquareStatus == true)
+                Refresh();
+                g = this.CreateGraphics();
+                Pen blackpen = new Pen(Color.Black);
+
+                switch (selectedShape)
                 {
-                    if (clicknumber == 0)
-                    {
-                        one = new Point(e.X, e.Y);
-                        clicknumber = 1;
-                    }
-                    else
-                    {
-                        two = new Point(e.X, e.Y);
-                        clicknumber = 0;
-                        selectSquareStatus = false;
+                    case ShapeSelected.SQUARE:
 
-                        Graphics g = this.CreateGraphics();
-                        Pen blackpen = new Pen(Color.Black);
-
-                        Square aShape = new Square(one, two);
+                        Square aShape = new Square(mdown, e.Location);
                         aShape.draw(g, blackpen);
-                    }
+
+                        break;
+
+                    case ShapeSelected.TRIANGLE:
+                        Triangle triangle = new Triangle();
+
+                        break;
+
+                    case ShapeSelected.CIRCLE:
+                        Circle circle = new Circle(mdown, e.Location);
+                        circle.draw(g, blackpen);
+                        break;
+
+                    default:
+                        break;
                 }
             }
         }
-    }    
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+            mdown = e.Location;
+        }
+
+    }
 }
 
 
