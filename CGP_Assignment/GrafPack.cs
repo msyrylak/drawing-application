@@ -17,15 +17,14 @@ namespace CGP_Assignment
             CIRCLE
         }
 
-
         private MainMenu mainMenu;
         private ShapeSelected selectedShape = ShapeSelected.NONE;
+        private Point mDown;
+        private Point mMove;
         Graphics g;
+        Pen blackpen = new Pen(Color.Black);
 
-        private int clicknumber = 0;
-        private Point one;
-        private Point two;
-        private Point mdown;
+        private List<Shape> shapes = new List<Shape>();
 
         public GrafPack()
         {
@@ -79,6 +78,7 @@ namespace CGP_Assignment
         private void selectCircle(object sender, EventArgs e)
         {
             selectedShape = ShapeSelected.CIRCLE;
+            MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a circle.");
         }
 
         private void selectShape(object sender, EventArgs e)
@@ -98,28 +98,28 @@ namespace CGP_Assignment
         protected override void OnMouseMove(MouseEventArgs e)
         {
             base.OnMouseMove(e);
+            mMove = e.Location;
+
             if (e.Button == MouseButtons.Left)
             {
                 Refresh();
-                g = this.CreateGraphics();
-                Pen blackpen = new Pen(Color.Black);
-
                 switch (selectedShape)
                 {
                     case ShapeSelected.SQUARE:
 
-                        Square aShape = new Square(mdown, e.Location);
+                        Square aShape = new Square(mDown, mMove);
                         aShape.draw(g, blackpen);
-
                         break;
 
                     case ShapeSelected.TRIANGLE:
-                        Triangle triangle = new Triangle();
+
+                        Triangle triangle = new Triangle(mDown, mMove);
+                        triangle.draw(g, blackpen);
 
                         break;
 
                     case ShapeSelected.CIRCLE:
-                        Circle circle = new Circle(mdown, e.Location);
+                        Circle circle = new Circle(mDown, mMove);
                         circle.draw(g, blackpen);
                         break;
 
@@ -127,19 +127,62 @@ namespace CGP_Assignment
                         break;
                 }
             }
+
         }
 
         protected override void OnPaint(PaintEventArgs e)
         {
+            Bitmap bitmap = new Bitmap(this.Width, this.Height);
+
             base.OnPaint(e);
+            g = this.CreateGraphics();
+            Graphics gBuffer = Graphics.FromImage(bitmap);
+
+            foreach (var shape in shapes)
+            {
+                shape.draw(g, blackpen);
+            }
+
+            //gBuffer.DrawImage(bitmap, 0, 0);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            mdown = e.Location;
+            mDown = e.Location;
+            mMove = e.Location;
         }
 
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+
+            if (mDown.X != mMove.X && mDown.Y != mMove.Y)
+            {
+                switch (selectedShape)
+                {
+                    case ShapeSelected.SQUARE:
+
+                        Square aShape = new Square(mDown, mMove);
+                        shapes.Add(aShape);
+                        break;
+
+                    case ShapeSelected.TRIANGLE:
+
+                        Triangle triangle = new Triangle(mDown, mMove);
+
+                        break;
+
+                    case ShapeSelected.CIRCLE:
+                        Circle circle = new Circle(mDown, mMove);
+                        shapes.Add(circle);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
     }
 }
 

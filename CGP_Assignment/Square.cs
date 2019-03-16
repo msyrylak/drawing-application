@@ -22,7 +22,7 @@ namespace CGP_Assignment
         // from first principles. All other shapes should similarly be drawn from first principles. 
         // Ideally no C# standard library class or method should be used to create, draw or transform a shape
         // and instead should utilse user-developed code.
-        public void draw(Graphics g, Pen blackPen)
+        public override void draw(Graphics g, Pen blackPen)
         {
             // This method draws the square by calculating the positions of the other 2 corners
             double xDiff, yDiff, xMid, yMid;   // range and mid points of x & y  

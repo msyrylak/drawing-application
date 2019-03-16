@@ -21,7 +21,7 @@ namespace CGP_Assignment
             radius = Math.Sqrt(Math.Pow((end.Y - start.Y), 2) + Math.Pow((end.X - start.X), 2));
         }
 
-        public void draw(Graphics g, Pen pen)
+        public override void draw(Graphics g, Pen pen)
         {
             g.DrawEllipse(pen, (float)(startPoint.X - radius), (float)(startPoint.Y - radius),
                       (float)(radius + radius), (float)(radius + radius));

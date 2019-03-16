@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Drawing;
 
 namespace CGP_Assignment
 {
@@ -12,6 +13,11 @@ namespace CGP_Assignment
         // to be created containing different kinds of shapes.
         public Shape()   // constructor
         {
+        }
+
+        public virtual void draw(Graphics g, Pen p)
+        {
+
         }
     }
 }
