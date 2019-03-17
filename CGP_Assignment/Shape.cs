@@ -19,5 +19,11 @@ namespace CGP_Assignment
         {
 
         }
+
+        public virtual bool contains(Point point)
+        {
+            return false;
+        }
+
     }
 }

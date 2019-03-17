@@ -18,7 +18,8 @@ namespace CGP_Assignment
         }
 
         private MainMenu mainMenu;
-        private ShapeSelected selectedShape = ShapeSelected.NONE;
+        private ShapeSelected createShape = ShapeSelected.NONE;
+        private bool selectedShape = false;
         private Point mDown;
         private Point mMove;
         Graphics g;
@@ -37,6 +38,7 @@ namespace CGP_Assignment
             MainMenu mainMenu = new MainMenu();
             MenuItem createItem = new MenuItem();
             MenuItem selectItem = new MenuItem();
+            MenuItem exitItem = new MenuItem();
             MenuItem squareItem = new MenuItem();
             MenuItem triangleItem = new MenuItem();
             MenuItem circleItem = new MenuItem();
@@ -47,50 +49,79 @@ namespace CGP_Assignment
             triangleItem.Text = "&Triangle";
             circleItem.Text = "&Circle";
             selectItem.Text = "&Select";
+            exitItem.Text = "&Exit";
 
             mainMenu.MenuItems.Add(createItem);
             mainMenu.MenuItems.Add(selectItem);
+            mainMenu.MenuItems.Add(exitItem);
             createItem.MenuItems.Add(squareItem);
             createItem.MenuItems.Add(triangleItem);
             createItem.MenuItems.Add(circleItem);
+            //selectItem.MenuItems.Add(new MenuItem("Transform"));
 
             selectItem.Click += new System.EventHandler(this.selectShape);
-            squareItem.Click += new System.EventHandler(this.selectSquare);
-            triangleItem.Click += new System.EventHandler(this.selectTriangle);
-            circleItem.Click += new System.EventHandler(this.selectCircle);
+            exitItem.Click += new System.EventHandler(this.selectExit);
+            squareItem.Click += new System.EventHandler(this.createSquare);
+            triangleItem.Click += new System.EventHandler(this.createTriangle);
+            circleItem.Click += new System.EventHandler(this.createCircle);
 
             this.Menu = mainMenu;
             this.MouseClick += mouseClick;
         }
 
         // Generally, all methods of the form are usually private
-        private void selectSquare(object sender, EventArgs e)
+        private void createSquare(object sender, EventArgs e)
         {
-            selectedShape = ShapeSelected.SQUARE;
+            createShape = ShapeSelected.SQUARE;
             MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a square.");
         }
 
-        private void selectTriangle(object sender, EventArgs e)
+        private void createTriangle(object sender, EventArgs e)
         {
-            selectedShape = ShapeSelected.TRIANGLE;
+            createShape = ShapeSelected.TRIANGLE;
+            MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a triangle.");
         }
 
-        private void selectCircle(object sender, EventArgs e)
+        private void createCircle(object sender, EventArgs e)
         {
-            selectedShape = ShapeSelected.CIRCLE;
+            createShape = ShapeSelected.CIRCLE;
             MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a circle.");
         }
 
         private void selectShape(object sender, EventArgs e)
         {
             MessageBox.Show("You selected the Select option...");
+            selectedShape = true;
+            createShape = ShapeSelected.NONE;
         }
+
+        private void selectExit(object sender, EventArgs e)
+        {
+            string title = "Exit program";
+            string message = "Are you sure you want to Exit?";
+            DialogResult result = MessageBox.Show(message, title, MessageBoxButtons.YesNo);
+
+            if (result == DialogResult.Yes)
+            {
+                this.Dispose();
+            }
+        }
+
 
         // This method is quite important and detects all mouse clicks - other methods may need
         // to be implemented to detect other kinds of event handling eg keyboard presses.
         private void mouseClick(object sender, MouseEventArgs e)
         {
-
+            if (selectedShape == true && e.Button == MouseButtons.Left)
+            {
+                foreach (var shape in shapes)
+                {
+                    if (shape.contains(e.Location))
+                    {
+                        MessageBox.Show("Hit!");
+                    }
+                }
+            }
 
         }
 
@@ -103,7 +134,7 @@ namespace CGP_Assignment
             if (e.Button == MouseButtons.Left)
             {
                 Refresh();
-                switch (selectedShape)
+                switch (createShape)
                 {
                     case ShapeSelected.SQUARE:
 
@@ -115,7 +146,6 @@ namespace CGP_Assignment
 
                         Triangle triangle = new Triangle(mDown, mMove);
                         triangle.draw(g, blackpen);
-
                         break;
 
                     case ShapeSelected.CIRCLE:
@@ -132,18 +162,13 @@ namespace CGP_Assignment
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            Bitmap bitmap = new Bitmap(this.Width, this.Height);
-
             base.OnPaint(e);
             g = this.CreateGraphics();
-            Graphics gBuffer = Graphics.FromImage(bitmap);
 
             foreach (var shape in shapes)
             {
                 shape.draw(g, blackpen);
             }
-
-            //gBuffer.DrawImage(bitmap, 0, 0);
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
@@ -159,7 +184,7 @@ namespace CGP_Assignment
 
             if (mDown.X != mMove.X && mDown.Y != mMove.Y)
             {
-                switch (selectedShape)
+                switch (createShape)
                 {
                     case ShapeSelected.SQUARE:
 
@@ -170,7 +195,7 @@ namespace CGP_Assignment
                     case ShapeSelected.TRIANGLE:
 
                         Triangle triangle = new Triangle(mDown, mMove);
-
+                        shapes.Add(triangle);
                         break;
 
                     case ShapeSelected.CIRCLE:

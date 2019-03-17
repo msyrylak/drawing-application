@@ -12,6 +12,9 @@ namespace CGP_Assignment
         //This class contains the specific details for a square defined in terms of opposite corners
         Point keyPt, oppPt;      // these points identify opposite corners of the square
 
+        // axis aligned bounding box
+       public Rectangle aabb;
+
         public Square(Point keyPt, Point oppPt)   // constructor
         {
             this.keyPt = keyPt;
@@ -38,7 +41,29 @@ namespace CGP_Assignment
             g.DrawLine(blackPen, (int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2), (int)oppPt.X, (int)oppPt.Y);
             g.DrawLine(blackPen, (int)oppPt.X, (int)oppPt.Y, (int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2));
             g.DrawLine(blackPen, (int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2), (int)keyPt.X, (int)keyPt.Y);
+
+            List<Point> points = new List<Point>();
+            points.Add(new Point(keyPt.X, keyPt.Y));
+            points.Add(new Point(oppPt.X, oppPt.Y));
+            points.Add(new Point((int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2)));
+            points.Add(new Point((int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2)));
+
+            int maxX = points.Max(p => p.X);
+            int maxY = points.Max(p => p.Y);
+            int minX = points.Min(p => p.X);
+            int minY = points.Min(p => p.Y);
+
+            // create bounding box
+            aabb = new Rectangle(new Point(minX, minY), new Size(maxX - minX, maxY - minY));
+            //g.DrawRectangle(blackPen, aabb);
         }
+
+        public override bool contains(Point point)
+        {
+            base.contains(point);
+            return aabb.Contains(point);
+        }
+
 
     }
 }
