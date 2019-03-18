@@ -8,7 +8,6 @@ namespace CGP_Assignment
 {
     public partial class GrafPack : Form
     {
-
         enum ShapeSelected
         {
             NONE,
@@ -18,8 +17,12 @@ namespace CGP_Assignment
         }
 
         private MainMenu mainMenu;
+        ContextMenu PopupMenu = new ContextMenu();
         private ShapeSelected createShape = ShapeSelected.NONE;
         private bool selectedShape = false;
+        private bool deleteShape = false;
+        private bool transformShape = false;
+        private bool moveShape = false;
         private Point mDown;
         private Point mMove;
         Graphics g;
@@ -42,7 +45,10 @@ namespace CGP_Assignment
             MenuItem squareItem = new MenuItem();
             MenuItem triangleItem = new MenuItem();
             MenuItem circleItem = new MenuItem();
-
+            MenuItem deleteItem = new MenuItem();
+            MenuItem transformItem = new MenuItem();
+            MenuItem moveItem = new MenuItem();
+            MenuItem rotateItem = new MenuItem();
 
             createItem.Text = "&Create";
             squareItem.Text = "&Square";
@@ -50,6 +56,10 @@ namespace CGP_Assignment
             circleItem.Text = "&Circle";
             selectItem.Text = "&Select";
             exitItem.Text = "&Exit";
+            deleteItem.Text = "&Delete";
+            transformItem.Text = "&Transform";
+            moveItem.Text = "&Move";
+            rotateItem.Text = "&Rotate";
 
             mainMenu.MenuItems.Add(createItem);
             mainMenu.MenuItems.Add(selectItem);
@@ -57,13 +67,19 @@ namespace CGP_Assignment
             createItem.MenuItems.Add(squareItem);
             createItem.MenuItems.Add(triangleItem);
             createItem.MenuItems.Add(circleItem);
-            //selectItem.MenuItems.Add(new MenuItem("Transform"));
+            PopupMenu.MenuItems.Add(transformItem);
+            PopupMenu.MenuItems.Add(deleteItem);
+            transformItem.MenuItems.Add(moveItem);
+            transformItem.MenuItems.Add(rotateItem);
 
             selectItem.Click += new System.EventHandler(this.selectShape);
             exitItem.Click += new System.EventHandler(this.selectExit);
             squareItem.Click += new System.EventHandler(this.createSquare);
             triangleItem.Click += new System.EventHandler(this.createTriangle);
             circleItem.Click += new System.EventHandler(this.createCircle);
+            deleteItem.Click += new EventHandler(this.deleteItem);
+            transformItem.Click += new EventHandler(this.transformItem);
+            moveItem.Click += new EventHandler(this.moveItem);
 
             this.Menu = mainMenu;
             this.MouseClick += mouseClick;
@@ -90,7 +106,7 @@ namespace CGP_Assignment
 
         private void selectShape(object sender, EventArgs e)
         {
-            MessageBox.Show("You selected the Select option...");
+            MessageBox.Show("Click on any of the shapes to transform or delete them");
             selectedShape = true;
             createShape = ShapeSelected.NONE;
         }
@@ -107,27 +123,61 @@ namespace CGP_Assignment
             }
         }
 
+        private void deleteItem(object sender, EventArgs e)
+        {
+            deleteShape = true;
+        }
+
+        private void transformItem(object sender, EventArgs e)
+        {
+            transformShape = true;
+        }
+
+        private void moveItem(object sender, EventArgs e)
+        {
+            moveShape = true;
+        }
+
+        private void rotateItem(object sender, EventArgs e)
+        {
+
+        }
+
 
         // This method is quite important and detects all mouse clicks - other methods may need
         // to be implemented to detect other kinds of event handling eg keyboard presses.
         private void mouseClick(object sender, MouseEventArgs e)
         {
+            //g = this.CreateGraphics();
+
             if (selectedShape == true && e.Button == MouseButtons.Left)
             {
-                foreach (var shape in shapes)
+                foreach (var shape in shapes.ToArray())
                 {
                     if (shape.contains(e.Location))
                     {
-                        MessageBox.Show("Hit!");
+                        shapes[shapes.IndexOf(shape)].draw(g, Pens.Red);
+                        PopupMenu.Show(this, e.Location);
+                        if (deleteShape == true)
+                        {
+                            shapes.Remove(shape);
+                            this.Invalidate();
+                            deleteShape = false;
+                        }
+                        else if(transformShape == true)
+                        {
+
+                        }
                     }
                 }
             }
-
         }
 
         // draw shapes using rubber banding
         protected override void OnMouseMove(MouseEventArgs e)
         {
+            g = this.CreateGraphics();
+
             base.OnMouseMove(e);
             mMove = e.Location;
 
@@ -138,8 +188,8 @@ namespace CGP_Assignment
                 {
                     case ShapeSelected.SQUARE:
 
-                        Square aShape = new Square(mDown, mMove);
-                        aShape.draw(g, blackpen);
+                        Square square = new Square(mDown, mMove);
+                        square.draw(g, blackpen);
                         break;
 
                     case ShapeSelected.TRIANGLE:
@@ -181,6 +231,7 @@ namespace CGP_Assignment
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
+            g = this.CreateGraphics();
 
             if (mDown.X != mMove.X && mDown.Y != mMove.Y)
             {
@@ -188,8 +239,8 @@ namespace CGP_Assignment
                 {
                     case ShapeSelected.SQUARE:
 
-                        Square aShape = new Square(mDown, mMove);
-                        shapes.Add(aShape);
+                        Square square = new Square(mDown, mMove);
+                        shapes.Add(square);
                         break;
 
                     case ShapeSelected.TRIANGLE:

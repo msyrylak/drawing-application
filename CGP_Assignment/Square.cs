@@ -13,7 +13,7 @@ namespace CGP_Assignment
         Point keyPt, oppPt;      // these points identify opposite corners of the square
 
         // axis aligned bounding box
-       public Rectangle aabb;
+        public Rectangle aabb;
 
         public Square(Point keyPt, Point oppPt)   // constructor
         {
@@ -62,6 +62,12 @@ namespace CGP_Assignment
         {
             base.contains(point);
             return aabb.Contains(point);
+        }
+
+        public Square Mirror(Shape shape)
+        {
+            Square newShape = new Square(shape.End, shape.Start);
+            return newShape;
         }
 
 

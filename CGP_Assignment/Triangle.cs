@@ -11,6 +11,7 @@ namespace CGP_Assignment
     {
         private Point startPoint, endPoint;
         public Rectangle aabb;
+
         public Triangle(Point start, Point end)
         {
             startPoint = start;
