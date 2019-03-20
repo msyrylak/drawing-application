@@ -10,7 +10,12 @@ namespace CGP_Assignment
     class Square : Shape
     {
         //This class contains the specific details for a square defined in terms of opposite corners
-        Point keyPt, oppPt;      // these points identify opposite corners of the square
+        Point keyPt, oppPt; // these points identify opposite corners of the square
+
+        Point A = new Point();
+        Point B = new Point();
+        Point C = new Point();
+        Point D = new Point();
 
         // axis aligned bounding box
         public Rectangle aabb;
@@ -36,6 +41,12 @@ namespace CGP_Assignment
             xMid = (oppPt.X + keyPt.X) / 2;
             yMid = (oppPt.Y + keyPt.Y) / 2;
 
+            A = new Point(keyPt.X, keyPt.Y);
+            B = new Point(oppPt.X, oppPt.Y);
+            C = new Point((int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2));
+            D = new Point((int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2));
+
+
             // draw square
             g.DrawLine(blackPen, (int)keyPt.X, (int)keyPt.Y, (int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2));
             g.DrawLine(blackPen, (int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2), (int)oppPt.X, (int)oppPt.Y);
@@ -58,16 +69,45 @@ namespace CGP_Assignment
             //g.DrawRectangle(blackPen, aabb);
         }
 
+        public Square RotateShape()
+        {
+            double xMid = (oppPt.X + keyPt.X) / 2;
+            double yMid = (oppPt.Y + keyPt.Y) / 2;
+            Square newSquaer = new Square(this.keyPt, this.oppPt);
+            newSquaer = Transform.Rotate(new Point((int)xMid, (int)yMid), this.keyPt, this.oppPt);
+
+            return newSquaer;
+
+        }
+
         public override bool contains(Point point)
         {
+            //float A1 = area(A.X, A.Y, B.X, B.Y, C.X, C.Y) + area(A.X, A.Y, D.X, D.Y, C.X, C.Y);
+            //float PAB = area(point.X, point.Y, A.X, A.Y, B.X, B.Y);
+            //float PBC = area(point.X, point.Y, B.X, B.Y, C.X, C.X);
+            //float PCD = area(point.X, point.Y, C.X, C.Y, D.X, D.Y);
+            //float PAD = area(point.X, point.Y, A.X, A.Y, D.X, D.Y);
+
+            //return (A1 == PAB + PBC + PCD + PAD);
+
             base.contains(point);
             return aabb.Contains(point);
+
+
         }
 
         public Square Mirror(Shape shape)
         {
             Square newShape = new Square(shape.End, shape.Start);
             return newShape;
+        }
+
+        static float area(int x1, int y1, int x2,
+                   int y2, int x3, int y3)
+        {
+            return (float)Math.Abs((x1 * (y2 - y3) +
+                                    x2 * (y3 - y1) +
+                                    x3 * (y1 - y2)) / 2.0);
         }
 
 

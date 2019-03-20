@@ -20,6 +20,7 @@ namespace CGP_Assignment
         ContextMenu PopupMenu = new ContextMenu();
         private ShapeSelected createShape = ShapeSelected.NONE;
         private bool selectedShape = false;
+        private bool shapeFlag = false;
         private bool deleteShape = false;
         private bool transformShape = false;
         private bool moveShape = false;
@@ -106,7 +107,7 @@ namespace CGP_Assignment
 
         private void selectShape(object sender, EventArgs e)
         {
-            MessageBox.Show("Click on any of the shapes to transform or delete them");
+            MessageBox.Show("Right click on any of the shapes to transform or delete them");
             selectedShape = true;
             createShape = ShapeSelected.NONE;
         }
@@ -150,13 +151,12 @@ namespace CGP_Assignment
         {
             //g = this.CreateGraphics();
 
-            if (selectedShape == true && e.Button == MouseButtons.Left)
+            if (selectedShape == true)
             {
                 foreach (var shape in shapes.ToArray())
                 {
                     if (shape.contains(e.Location))
                     {
-                        shapes[shapes.IndexOf(shape)].draw(g, Pens.Red);
                         PopupMenu.Show(this, e.Location);
                         if (deleteShape == true)
                         {
@@ -164,9 +164,11 @@ namespace CGP_Assignment
                             this.Invalidate();
                             deleteShape = false;
                         }
-                        else if(transformShape == true)
+                        else if(moveShape == true)
                         {
-
+                            //this.Invalidate();
+                            //shape.RotateShape();
+                            Refresh();
                         }
                     }
                 }
@@ -215,9 +217,25 @@ namespace CGP_Assignment
             base.OnPaint(e);
             g = this.CreateGraphics();
 
+            Square square = new Square(new Point(100, 100), new Point(200, 200));
+            square.draw(g, blackpen);
+            if (moveShape == true)
+            {
+               Square dupa = square.RotateShape();
+               dupa.draw(g, blackpen);
+            }
+
             foreach (var shape in shapes)
             {
-                shape.draw(g, blackpen);
+                if(shapeFlag == true)
+                {
+                    shape.draw(g, Pens.Red);
+                }
+                else
+                {
+                    shape.draw(g, Pens.Black);
+
+                }
             }
         }
 
