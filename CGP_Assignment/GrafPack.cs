@@ -16,16 +16,20 @@ namespace CGP_Assignment
             CIRCLE
         }
 
+        Shape selectedShape = null;
         private MainMenu mainMenu;
         ContextMenu PopupMenu = new ContextMenu();
         private ShapeSelected createShape = ShapeSelected.NONE;
-        private bool selectedShape = false;
-        private bool shapeFlag = false;
+        private bool selectShape = false;
         private bool deleteShape = false;
-        private bool transformShape = false;
+        //private bool transformShape = false;
         private bool moveShape = false;
-        private Point mDown;
-        private Point mMove;
+        private bool rotateShape = false;
+
+        private PointF mDown;
+        private PointF mMove;
+        private PointF movementStart;
+
         Graphics g;
         Pen blackpen = new Pen(Color.Black);
 
@@ -34,6 +38,7 @@ namespace CGP_Assignment
         public GrafPack()
         {
             InitializeComponent();
+            //this.DoubleBuffered = true;
             this.SetStyle(ControlStyles.ResizeRedraw, true);
             this.WindowState = FormWindowState.Maximized;
             this.BackColor = Color.White;
@@ -65,22 +70,24 @@ namespace CGP_Assignment
             mainMenu.MenuItems.Add(createItem);
             mainMenu.MenuItems.Add(selectItem);
             mainMenu.MenuItems.Add(exitItem);
+            mainMenu.MenuItems.Add(moveItem);
             createItem.MenuItems.Add(squareItem);
             createItem.MenuItems.Add(triangleItem);
             createItem.MenuItems.Add(circleItem);
             PopupMenu.MenuItems.Add(transformItem);
             PopupMenu.MenuItems.Add(deleteItem);
-            transformItem.MenuItems.Add(moveItem);
+            //transformItem.MenuItems.Add(moveItem);
             transformItem.MenuItems.Add(rotateItem);
 
-            selectItem.Click += new System.EventHandler(this.selectShape);
+            selectItem.Click += new System.EventHandler(this.shapeSelect);
             exitItem.Click += new System.EventHandler(this.selectExit);
             squareItem.Click += new System.EventHandler(this.createSquare);
             triangleItem.Click += new System.EventHandler(this.createTriangle);
             circleItem.Click += new System.EventHandler(this.createCircle);
             deleteItem.Click += new EventHandler(this.deleteItem);
-            transformItem.Click += new EventHandler(this.transformItem);
+            //transformItem.Click += new EventHandler(this.transformItem);
             moveItem.Click += new EventHandler(this.moveItem);
+            rotateItem.Click += new EventHandler(this.rotateItem);
 
             this.Menu = mainMenu;
             this.MouseClick += mouseClick;
@@ -105,10 +112,10 @@ namespace CGP_Assignment
             MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a circle.");
         }
 
-        private void selectShape(object sender, EventArgs e)
+        private void shapeSelect(object sender, EventArgs e)
         {
             MessageBox.Show("Right click on any of the shapes to transform or delete them");
-            selectedShape = true;
+            selectShape = true;
             createShape = ShapeSelected.NONE;
         }
 
@@ -129,21 +136,30 @@ namespace CGP_Assignment
             deleteShape = true;
         }
 
-        private void transformItem(object sender, EventArgs e)
-        {
-            transformShape = true;
-        }
-
         private void moveItem(object sender, EventArgs e)
         {
             moveShape = true;
+            createShape = ShapeSelected.NONE;
+
         }
 
         private void rotateItem(object sender, EventArgs e)
         {
-
+            rotateShape = true;
         }
 
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            g = this.CreateGraphics();
+
+            foreach (var shape in shapes)
+            {
+                var color = shape == selectedShape ? Color.Red : Color.Black;
+                var pen = new Pen(color);
+                shape.draw(g, pen);
+            }
+        }
 
         // This method is quite important and detects all mouse clicks - other methods may need
         // to be implemented to detect other kinds of event handling eg keyboard presses.
@@ -151,28 +167,6 @@ namespace CGP_Assignment
         {
             //g = this.CreateGraphics();
 
-            if (selectedShape == true)
-            {
-                foreach (var shape in shapes.ToArray())
-                {
-                    if (shape.contains(e.Location))
-                    {
-                        PopupMenu.Show(this, e.Location);
-                        if (deleteShape == true)
-                        {
-                            shapes.Remove(shape);
-                            this.Invalidate();
-                            deleteShape = false;
-                        }
-                        else if(moveShape == true)
-                        {
-                            //this.Invalidate();
-                            //shape.RotateShape();
-                            Refresh();
-                        }
-                    }
-                }
-            }
         }
 
         // draw shapes using rubber banding
@@ -181,10 +175,11 @@ namespace CGP_Assignment
             g = this.CreateGraphics();
 
             base.OnMouseMove(e);
-            mMove = e.Location;
 
             if (e.Button == MouseButtons.Left)
             {
+               mMove = e.Location;
+
                 Refresh();
                 switch (createShape)
                 {
@@ -205,51 +200,51 @@ namespace CGP_Assignment
                         circle.draw(g, blackpen);
                         break;
 
+                    case ShapeSelected.NONE:
+                        if (moveShape == true)
+                        {
+                            //Refresh();
+                            foreach (var shape in shapes.ToArray())
+                            {
+                                if (shape.contains(e.Location))
+                                {
+                                    selectedShape = shape;
+
+                                    mDown = new PointF(shape.Start.X + e.X - movementStart.X, shape.Start.Y + e.Y - movementStart.Y);
+                                    mMove = new PointF(shape.End.X + e.X - movementStart.X, shape.End.Y + e.Y - movementStart.Y);
+                                    shape.Start = mDown;
+                                    shape.End = mMove;
+                                    shape.draw(g, blackpen);
+                                    //this.Invalidate();
+
+                                }
+                            }
+                        }
+                        break;
+
                     default:
                         break;
                 }
+                //Refresh();
             }
 
-        }
-
-        protected override void OnPaint(PaintEventArgs e)
-        {
-            base.OnPaint(e);
-            g = this.CreateGraphics();
-
-            Square square = new Square(new Point(100, 100), new Point(200, 200));
-            square.draw(g, blackpen);
-            if (moveShape == true)
-            {
-               Square dupa = square.RotateShape();
-               dupa.draw(g, blackpen);
-            }
-
-            foreach (var shape in shapes)
-            {
-                if(shapeFlag == true)
-                {
-                    shape.draw(g, Pens.Red);
-                }
-                else
-                {
-                    shape.draw(g, Pens.Black);
-
-                }
-            }
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
+            movementStart = e.Location;
             mDown = e.Location;
             mMove = e.Location;
+
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
             base.OnMouseUp(e);
             g = this.CreateGraphics();
+
+            //moveShape = false;
 
             if (mDown.X != mMove.X && mDown.Y != mMove.Y)
             {
@@ -276,6 +271,33 @@ namespace CGP_Assignment
                         break;
                 }
             }
+
+            if (selectShape == true)
+            {
+                foreach (var shape in shapes.ToArray())
+                {
+                    if (shape.contains(e.Location))
+                    {
+                        selectedShape = shape;
+                        Refresh();
+                        PopupMenu.Show(this, e.Location);
+                        if (deleteShape == true)
+                        {
+                            shapes.Remove(shape);
+                            //this.Invalidate();
+                            deleteShape = false;
+                            this.Refresh();
+                        }
+                        else if (rotateShape == true)
+                        {
+                            shape.Rotate(90);
+                            rotateShape = false;
+                            this.Invalidate();
+                        }
+                    }
+                }
+            }
+
         }
     }
 }

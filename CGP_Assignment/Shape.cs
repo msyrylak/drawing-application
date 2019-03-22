@@ -9,34 +9,12 @@ namespace CGP_Assignment
 {
     abstract class Shape
     {
-        private Point start, end;
-
-        public Point Start
-        {
-            get
-            {
-                return start;
-            }
-            set
-            {
-                start = value;
-            }
-        }
-
-        public Point End
-        {
-            get
-            {
-                return end;
-            }
-            set
-            {
-                end = value;
-            }
-        }
 
         // This is the base class for Shapes in the application. It should allow an array or LL
         // to be created containing different kinds of shapes.
+
+        public PointF Start { get; set; }
+        public PointF End { get; set; }
         public Shape()   // constructor
         {
         }
@@ -50,5 +28,15 @@ namespace CGP_Assignment
         {
             return false;
         }
+
+        public virtual void Move(Point one, Point two)
+        {
+
+        }
+        public virtual void Rotate(double angle)
+        {
+
+        }
+
     }
 }

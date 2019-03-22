@@ -9,21 +9,26 @@ namespace CGP_Assignment
 {
     class Square : Shape
     {
+        // rotation matrix
+        //static float[,] matrix = new float[3, 3] { { 0.7071f, 0.7071f, 0.0f }, { -0.7071f, 0.7071f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+        static float[,] matrix = new float[3, 3] { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+
+
         //This class contains the specific details for a square defined in terms of opposite corners
-        Point keyPt, oppPt; // these points identify opposite corners of the square
+        //public Point Start, End; // these points identify opposite corners of the square
 
-        Point A = new Point();
-        Point B = new Point();
-        Point C = new Point();
-        Point D = new Point();
-
+        PointF A = new PointF();
+        PointF B = new PointF();
+        PointF C = new PointF();
+        PointF D = new PointF();
+             
         // axis aligned bounding box
         public Rectangle aabb;
 
-        public Square(Point keyPt, Point oppPt)   // constructor
+        public Square(PointF startPoint, PointF endPoint)   // constructor
         {
-            this.keyPt = keyPt;
-            this.oppPt = oppPt;
+            this.Start = startPoint;
+            this.End = endPoint;
         }
 
         // You will need a different draw method for each kind of shape. Note the square is drawn
@@ -36,26 +41,26 @@ namespace CGP_Assignment
             double xDiff, yDiff, xMid, yMid;   // range and mid points of x & y  
 
             // calculate ranges and mid points
-            xDiff = oppPt.X - keyPt.X;
-            yDiff = oppPt.Y - keyPt.Y;
-            xMid = (oppPt.X + keyPt.X) / 2;
-            yMid = (oppPt.Y + keyPt.Y) / 2;
+            xDiff = End.X - Start.X;
+            yDiff = End.Y - Start.Y;
+            xMid = (End.X + Start.X) / 2;
+            yMid = (End.Y + Start.Y) / 2;
 
-            A = new Point(keyPt.X, keyPt.Y);
-            B = new Point(oppPt.X, oppPt.Y);
-            C = new Point((int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2));
-            D = new Point((int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2));
+            A = new PointF(Start.X, Start.Y);
+            B = new PointF(End.X, End.Y);
+            C = new PointF((float)(xMid + yDiff / 2), (float)(yMid - xDiff / 2));
+            D = new PointF((float)(xMid - yDiff / 2), (float)(yMid + xDiff / 2));
 
 
             // draw square
-            g.DrawLine(blackPen, (int)keyPt.X, (int)keyPt.Y, (int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2));
-            g.DrawLine(blackPen, (int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2), (int)oppPt.X, (int)oppPt.Y);
-            g.DrawLine(blackPen, (int)oppPt.X, (int)oppPt.Y, (int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2));
-            g.DrawLine(blackPen, (int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2), (int)keyPt.X, (int)keyPt.Y);
+            g.DrawLine(blackPen, A, C);
+            g.DrawLine(blackPen, C, B);
+            g.DrawLine(blackPen, B, D);
+            g.DrawLine(blackPen, D, A);
 
             List<Point> points = new List<Point>();
-            points.Add(new Point(keyPt.X, keyPt.Y));
-            points.Add(new Point(oppPt.X, oppPt.Y));
+            points.Add(new Point((int)Start.X, (int)Start.Y));
+            points.Add(new Point((int)End.X, (int)End.Y));
             points.Add(new Point((int)(xMid + yDiff / 2), (int)(yMid - xDiff / 2)));
             points.Add(new Point((int)(xMid - yDiff / 2), (int)(yMid + xDiff / 2)));
 
@@ -69,15 +74,49 @@ namespace CGP_Assignment
             //g.DrawRectangle(blackPen, aabb);
         }
 
-        public Square RotateShape()
+        public override void Rotate(double angle)
         {
-            double xMid = (oppPt.X + keyPt.X) / 2;
-            double yMid = (oppPt.Y + keyPt.Y) / 2;
-            Square newSquaer = new Square(this.keyPt, this.oppPt);
-            newSquaer = Transform.Rotate(new Point((int)xMid, (int)yMid), this.keyPt, this.oppPt);
+            base.Rotate(angle);
 
-            return newSquaer;
+            // prepare the rotation matrix
+            matrix[0, 0] = (float)Math.Cos(angle);
+            matrix[0, 1] = (float)Math.Sin(angle);
+            matrix[0, 2] = 0.0f;
+            matrix[1, 0] = -(float)Math.Sin(angle);
+            matrix[1, 1] = (float)Math.Cos(angle);
+            matrix[1, 2] = 0.0f;
 
+
+            double xMid = (End.X + Start.X) / 2;
+            double yMid = (End.Y + Start.Y) / 2;
+
+            float[] point1 = new float[2] { (int)(Start.X - xMid), (int)(Start.Y - yMid) };
+            float[] point2 = new float[2] { (int)(End.X - xMid), (int)(End.Y - yMid) };
+
+            float[] newPointKey = new float[2];
+            float[] newPointOpp = new float[2];
+
+
+            for (int col = 0; col < 2; col++)
+            {
+                newPointKey[col] = 0.0f;
+                for (int index = 0; index < 2; index++)
+                {
+                    newPointKey[col] += point1[index] * matrix[index, col];
+                }
+            }
+
+            for (int col = 0; col < 2; col++)
+            {
+                newPointOpp[col] = 0.0f;
+                for (int index = 0; index < 2; index++)
+                {
+                    newPointOpp[col] += point2[index] * matrix[index, col];
+                }
+            }
+
+            Start = new Point((int)(newPointKey[0] + xMid), (int)(newPointKey[1] + yMid));
+            End = new Point((int)(newPointOpp[0] + xMid), (int)(newPointOpp[1] + yMid));
         }
 
         public override bool contains(Point point)
@@ -90,20 +129,23 @@ namespace CGP_Assignment
 
             //return (A1 == PAB + PBC + PCD + PAD);
 
+            /*public override bool IsInside(int mouseX, int mouseY) 
+            {
+            return 
+            mouseX >= x && 
+            mouseX <= x + width &&
+            mouseY >= y &&
+            mouseY <= y + height;
+            */
+
             base.contains(point);
             return aabb.Contains(point);
 
 
         }
 
-        public Square Mirror(Shape shape)
-        {
-            Square newShape = new Square(shape.End, shape.Start);
-            return newShape;
-        }
-
         static float area(int x1, int y1, int x2,
-                   int y2, int x3, int y3)
+               int y2, int x3, int y3)
         {
             return (float)Math.Abs((x1 * (y2 - y3) +
                                     x2 * (y3 - y1) +
