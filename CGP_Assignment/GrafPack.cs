@@ -78,15 +78,16 @@ namespace CGP_Assignment
 
             mainMenu.MenuItems.Add(createItem);
             mainMenu.MenuItems.Add(selectItem);
-            mainMenu.MenuItems.Add(exitItem);
+            mainMenu.MenuItems.Add(rotateItem);
             mainMenu.MenuItems.Add(moveItem);
+            mainMenu.MenuItems.Add(exitItem);
             createItem.MenuItems.Add(squareItem);
             createItem.MenuItems.Add(triangleItem);
             createItem.MenuItems.Add(circleItem);
             PopupMenu.MenuItems.Add(transformItem);
             PopupMenu.MenuItems.Add(deleteItem);
             //transformItem.MenuItems.Add(moveItem);
-            transformItem.MenuItems.Add(rotateItem);
+            //transformItem.MenuItems.Add(rotateItem);
 
             selectItem.Click += new System.EventHandler(this.shapeSelect);
             exitItem.Click += new System.EventHandler(this.selectExit);
@@ -105,18 +106,24 @@ namespace CGP_Assignment
         // Generally, all methods of the form are usually private
         private void createSquare(object sender, EventArgs e)
         {
+            selectShape = false;
+            moveShape = false;
             createShape = ShapeSelected.SQUARE;
             MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a square.");
         }
 
         private void createTriangle(object sender, EventArgs e)
         {
+            selectShape = false;
+            moveShape = false;
             createShape = ShapeSelected.TRIANGLE;
             MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a triangle.");
         }
 
         private void createCircle(object sender, EventArgs e)
         {
+            selectShape = false;
+            moveShape = false;
             createShape = ShapeSelected.CIRCLE;
             MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a circle.");
         }
@@ -125,6 +132,7 @@ namespace CGP_Assignment
         {
             MessageBox.Show("Right click on any of the shapes to transform or delete them");
             selectShape = true;
+            moveShape = false;
             createShape = ShapeSelected.NONE;
         }
 
@@ -148,8 +156,8 @@ namespace CGP_Assignment
         private void moveItem(object sender, EventArgs e)
         {
             moveShape = true;
+            selectShape = false;
             createShape = ShapeSelected.NONE;
-
         }
 
         private void rotateItem(object sender, EventArgs e)
@@ -160,13 +168,18 @@ namespace CGP_Assignment
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
+            //Bitmap offScr = new Bitmap(this.Width, this.Height);
+
             g = this.CreateGraphics();
+            //Graphics g2 = Graphics.FromImage(offScr);
 
             foreach (var shape in shapes)
             {
                 var color = shape == selectedShape ? Color.Red : Color.Black;
                 var pen = new Pen(color, 2);
                 shape.draw(g, pen);
+                //g.DrawImage(offScr, 0, 0);
+
             }
         }
 
@@ -174,9 +187,33 @@ namespace CGP_Assignment
         // to be implemented to detect other kinds of event handling eg keyboard presses.
         private void mouseClick(object sender, MouseEventArgs e)
         {
-            //g = this.CreateGraphics();
-
+            if (e.Button == MouseButtons.Left)
+            {
+                if (selectShape == true)
+                {
+                    foreach (var shape in shapes.ToArray())
+                    {
+                        if (shape.contains(e.Location))
+                        {
+                            selectedShape = shape;
+                            //PopupMenu.Show(this, e.Location);
+                            if (deleteShape == true)
+                            {
+                                shapes.Remove(shape);
+                                Refresh();
+                                deleteShape = false;
+                            }
+                        }
+                    }
+                }
+            }
         }
+
+        private float StartAngle;
+        private float CurrentAngle;
+        private float TotalAngle;
+        private bool DragInProgress;
+
 
         // draw shapes using rubber banding
         protected override void OnMouseMove(MouseEventArgs e)
@@ -216,6 +253,27 @@ namespace CGP_Assignment
                                 selectedShape.End = new PointF(Moving.EndShapePoint.X + e.X - Moving.StartMoveMousePoint.X, Moving.EndShapePoint.Y + e.Y - Moving.StartMoveMousePoint.Y);
                             }
                         }
+                        else if (rotateShape == true && selectedShape != null)
+                        {
+                            // Get the angle from horizontal to the
+                            // vector between the center and the current point.
+                            float dx = e.X - ((selectedShape.End.X + selectedShape.Start.X) / 2);
+                            float dy = e.Y - ((selectedShape.End.Y + selectedShape.Start.Y) / 2);
+                            float new_angle = (float)Math.Atan2(dy, dx);
+
+                            // Calculate the change in angle.
+                            CurrentAngle = new_angle - StartAngle;
+
+                            // Convert to degrees.
+                            CurrentAngle *= 180 / (float)Math.PI;
+
+                            // Add to the previous total angle rotated.
+                            CurrentAngle += TotalAngle;
+
+                            selectedShape.Rotate(CurrentAngle);
+                            //Refresh();
+                            //rotateShape = false;
+                        }
                         break;
 
                     default:
@@ -246,6 +304,16 @@ namespace CGP_Assignment
                 }
             }
 
+            if (selectedShape != null)
+            {
+                // Get the initial angle from horizontal to the
+                // vector between the center and the drag start point.
+                DragInProgress = true;
+                float dx = e.X - ((selectedShape.End.X + selectedShape.Start.X) / 2);
+                float dy = e.Y - ((selectedShape.End.Y + selectedShape.Start.Y) / 2);
+                StartAngle = (float)Math.Atan2(dy, dx);
+            }
+
             mDown = e.Location;
             mMove = e.Location;
 
@@ -258,6 +326,10 @@ namespace CGP_Assignment
 
             selectedShape = null;
             Moving = null;
+
+            DragInProgress = false;
+            // Save the new total angle of rotation.
+            TotalAngle = CurrentAngle;
 
             if (mDown.X != mMove.X && mDown.Y != mMove.Y)
             {
@@ -284,33 +356,10 @@ namespace CGP_Assignment
                         break;
                 }
             }
-
-            if (selectShape == true)
-            {
-                foreach (var shape in shapes.ToArray())
-                {
-                    if (shape.contains(e.Location))
-                    {
-                        selectedShape = shape;
-                        PopupMenu.Show(this, e.Location);
-                        if (deleteShape == true)
-                        {
-                            shapes.Remove(shape);
-                            deleteShape = false;
-                            //this.Invalidate();
-                        }
-                        else if (rotateShape == true)
-                        {
-                            shape.Rotate(90);
-                            rotateShape = false;
-                            //this.Invalidate();
-                        }
-                    }
-                }
-            }
-
         }
+
     }
 }
+
 
 
