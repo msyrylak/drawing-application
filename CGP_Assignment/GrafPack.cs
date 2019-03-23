@@ -16,7 +16,16 @@ namespace CGP_Assignment
             CIRCLE
         }
 
+        public class MoveInfo
+        {
+            //public Shape shape;
+            public PointF StartShapePoint;
+            public PointF EndShapePoint;
+            public Point StartMoveMousePoint;
+        }
+
         Shape selectedShape = null;
+        MoveInfo Moving = null;
         private MainMenu mainMenu;
         ContextMenu PopupMenu = new ContextMenu();
         private ShapeSelected createShape = ShapeSelected.NONE;
@@ -28,10 +37,10 @@ namespace CGP_Assignment
 
         private PointF mDown;
         private PointF mMove;
-        private PointF movementStart;
+        //private PointF movementStart;
 
         Graphics g;
-        Pen blackpen = new Pen(Color.Black);
+        Pen blackpen = new Pen(Color.Black, 2);
 
         private List<Shape> shapes = new List<Shape>();
 
@@ -156,7 +165,7 @@ namespace CGP_Assignment
             foreach (var shape in shapes)
             {
                 var color = shape == selectedShape ? Color.Red : Color.Black;
-                var pen = new Pen(color);
+                var pen = new Pen(color, 2);
                 shape.draw(g, pen);
             }
         }
@@ -178,19 +187,17 @@ namespace CGP_Assignment
 
             if (e.Button == MouseButtons.Left)
             {
-               mMove = e.Location;
+                mMove = e.Location;
 
                 Refresh();
                 switch (createShape)
                 {
                     case ShapeSelected.SQUARE:
-
                         Square square = new Square(mDown, mMove);
                         square.draw(g, blackpen);
                         break;
 
                     case ShapeSelected.TRIANGLE:
-
                         Triangle triangle = new Triangle(mDown, mMove);
                         triangle.draw(g, blackpen);
                         break;
@@ -203,21 +210,10 @@ namespace CGP_Assignment
                     case ShapeSelected.NONE:
                         if (moveShape == true)
                         {
-                            //Refresh();
-                            foreach (var shape in shapes.ToArray())
+                            if (Moving != null)
                             {
-                                if (shape.contains(e.Location))
-                                {
-                                    selectedShape = shape;
-
-                                    mDown = new PointF(shape.Start.X + e.X - movementStart.X, shape.Start.Y + e.Y - movementStart.Y);
-                                    mMove = new PointF(shape.End.X + e.X - movementStart.X, shape.End.Y + e.Y - movementStart.Y);
-                                    shape.Start = mDown;
-                                    shape.End = mMove;
-                                    shape.draw(g, blackpen);
-                                    //this.Invalidate();
-
-                                }
+                                selectedShape.Start = new PointF(Moving.StartShapePoint.X + e.X - Moving.StartMoveMousePoint.X, Moving.StartShapePoint.Y + e.Y - Moving.StartMoveMousePoint.Y);
+                                selectedShape.End = new PointF(Moving.EndShapePoint.X + e.X - Moving.StartMoveMousePoint.X, Moving.EndShapePoint.Y + e.Y - Moving.StartMoveMousePoint.Y);
                             }
                         }
                         break;
@@ -225,7 +221,6 @@ namespace CGP_Assignment
                     default:
                         break;
                 }
-                //Refresh();
             }
 
         }
@@ -233,7 +228,24 @@ namespace CGP_Assignment
         protected override void OnMouseDown(MouseEventArgs e)
         {
             base.OnMouseDown(e);
-            movementStart = e.Location;
+            foreach (var shape in shapes.ToArray())
+            {
+                if (shape.contains(e.Location))
+                {
+                    selectedShape = shape;
+
+                    if (selectedShape != null && Moving == null)
+                    {
+                        Moving = new MoveInfo
+                        {
+                            StartShapePoint = selectedShape.Start,
+                            EndShapePoint = selectedShape.End,
+                            StartMoveMousePoint = e.Location
+                        };
+                    }
+                }
+            }
+
             mDown = e.Location;
             mMove = e.Location;
 
@@ -244,7 +256,8 @@ namespace CGP_Assignment
             base.OnMouseUp(e);
             g = this.CreateGraphics();
 
-            //moveShape = false;
+            selectedShape = null;
+            Moving = null;
 
             if (mDown.X != mMove.X && mDown.Y != mMove.Y)
             {
@@ -279,20 +292,18 @@ namespace CGP_Assignment
                     if (shape.contains(e.Location))
                     {
                         selectedShape = shape;
-                        Refresh();
                         PopupMenu.Show(this, e.Location);
                         if (deleteShape == true)
                         {
                             shapes.Remove(shape);
-                            //this.Invalidate();
                             deleteShape = false;
-                            this.Refresh();
+                            //this.Invalidate();
                         }
                         else if (rotateShape == true)
                         {
                             shape.Rotate(90);
                             rotateShape = false;
-                            this.Invalidate();
+                            //this.Invalidate();
                         }
                     }
                 }
