@@ -17,10 +17,11 @@ namespace CGP_Assignment
        // public Point startPoint, endPoint;
         public Rectangle aabb;
 
-        public Triangle(PointF start, PointF end)
+        public Triangle(PointF start, PointF end, float rotation)
         {
             this.Start = start;
             this.End = end;
+            this.RotationAngle = rotation;
         }
 
         public override void draw(Graphics g, Pen blackPen)
@@ -62,10 +63,8 @@ namespace CGP_Assignment
         }
 
 
-        public override void Rotate(double angle)
+        public override void Rotate(double angle, ref PointF newStart, ref PointF newEnd)
         {
-            base.Rotate(angle);
-
             // prepare the rotation matrix
             matrix[0, 0] = (float)Math.Cos(angle);
             matrix[0, 1] = (float)Math.Sin(angle);

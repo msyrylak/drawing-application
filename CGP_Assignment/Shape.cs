@@ -15,6 +15,9 @@ namespace CGP_Assignment
 
         public PointF Start { get; set; }
         public PointF End { get; set; }
+        public float RotationAngle { get; set; }
+
+
         public Shape()   // constructor
         {
         }
@@ -33,7 +36,7 @@ namespace CGP_Assignment
         {
 
         }
-        public virtual void Rotate(double angle)
+        public virtual void Rotate(double angle, ref PointF newStart, ref PointF newEnd)
         {
 
         }

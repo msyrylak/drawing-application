@@ -11,10 +11,11 @@ namespace CGP_Assignment
     {
         double radius;
 
-        public Circle(PointF start, PointF end)
+        public Circle(PointF start, PointF end, float rotation)
         {
             Start = start;
             End = end;
+            this.RotationAngle = rotation;
 
             radius = Math.Sqrt(Math.Pow((end.Y - start.Y), 2) + Math.Pow((end.X - start.X), 2));
         }

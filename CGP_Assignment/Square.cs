@@ -11,7 +11,7 @@ namespace CGP_Assignment
     {
         // rotation matrix
         //static float[,] matrix = new float[3, 3] { { 0.7071f, 0.7071f, 0.0f }, { -0.7071f, 0.7071f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
-        static float[,] matrix = new float[3, 3] { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+        static float[,] matrix = new float[3, 3];
 
 
         //This class contains the specific details for a square defined in terms of opposite corners
@@ -25,10 +25,11 @@ namespace CGP_Assignment
         // axis aligned bounding box
         public Rectangle aabb;
 
-        public Square(PointF startPoint, PointF endPoint)   // constructor
+        public Square(PointF startPoint, PointF endPoint, float rotationAngle)   // constructor
         {
             this.Start = startPoint;
             this.End = endPoint;
+            this.RotationAngle = rotationAngle;
         }
 
         // You will need a different draw method for each kind of shape. Note the square is drawn
@@ -39,15 +40,18 @@ namespace CGP_Assignment
         {
             // This method draws the square by calculating the positions of the other 2 corners
             double xDiff, yDiff, xMid, yMid;   // range and mid points of x & y  
+            PointF newStart = new PointF(Start.X,Start.Y);
+            PointF newEnd = new PointF(End.X, End.Y);
+            this.Rotate(RotationAngle, ref newStart, ref newEnd);
 
             // calculate ranges and mid points
-            xDiff = End.X - Start.X;
-            yDiff = End.Y - Start.Y;
-            xMid = (End.X + Start.X) / 2;
-            yMid = (End.Y + Start.Y) / 2;
+            xDiff = newEnd.X - newStart.X;
+            yDiff = newEnd.Y - newStart.Y;
+            xMid = (newEnd.X + newStart.X) / 2;
+            yMid = (newEnd.Y + newStart.Y) / 2;
 
-            A = new PointF(Start.X, Start.Y);
-            B = new PointF(End.X, End.Y);
+            A = new PointF(newStart.X, newStart.Y);
+            B = new PointF(newEnd.X, newEnd.Y);
             C = new PointF((float)(xMid + yDiff / 2), (float)(yMid - xDiff / 2));
             D = new PointF((float)(xMid - yDiff / 2), (float)(yMid + xDiff / 2));
 
@@ -74,21 +78,31 @@ namespace CGP_Assignment
             //g.DrawRectangle(blackPen, aabb);
         }
 
-        public override void Rotate(double angle)
+        public override void Rotate(double angle, ref PointF newStart, ref PointF newEnd)
         {
-            base.Rotate(angle);
+            // generate identity matrix
+            matrix[0, 0] = 1.0f;
+            matrix[0, 1] = 0.0f;
+            matrix[0, 2] = 0.0f;
+            matrix[1, 0] = 0.0f;
+            matrix[1, 1] = 1.0f;
+            matrix[1, 2] = 0.0f;
+            matrix[2, 0] = 0.0f;
+            matrix[2, 1] = 0.0f;
+            matrix[2, 2] = 1.0f;
+
 
             // prepare the rotation matrix
-            matrix[0, 0] = (float)Math.Cos(angle);
-            matrix[0, 1] = (float)Math.Sin(angle);
-            matrix[0, 2] = 0.0f;
-            matrix[1, 0] = -(float)Math.Sin(angle);
-            matrix[1, 1] = (float)Math.Cos(angle);
-            matrix[1, 2] = 0.0f;
+            float c = (float)Math.Cos(angle);
+            float s = (float)Math.Sin(angle);
+            matrix[0, 0] = c;
+            matrix[0, 1] = s;
+            matrix[1, 0] = -s;
+            matrix[1, 1] = c;
 
 
-            double xMid = (End.X + Start.X) / 2;
-            double yMid = (End.Y + Start.Y) / 2;
+            float xMid = (End.X + Start.X) / 2;
+            float yMid = (End.Y + Start.Y) / 2;
 
             float[] point1 = new float[2] { (int)(Start.X - xMid), (int)(Start.Y - yMid) };
             float[] point2 = new float[2] { (int)(End.X - xMid), (int)(End.Y - yMid) };
@@ -115,8 +129,8 @@ namespace CGP_Assignment
                 }
             }
 
-            Start = new Point((int)(newPointKey[0] + xMid), (int)(newPointKey[1] + yMid));
-            End = new Point((int)(newPointOpp[0] + xMid), (int)(newPointOpp[1] + yMid));
+            newStart = new PointF(newPointKey[0] + xMid, newPointKey[1] + yMid);
+            newEnd = new PointF(newPointOpp[0] + xMid, newPointOpp[1] + yMid);
         }
 
         public override bool contains(Point point)

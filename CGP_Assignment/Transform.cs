@@ -42,7 +42,7 @@ namespace CGP_Assignment
             Point transfPoint = new Point((int)newPoint[0] + center.X, (int)newPoint[1] + center.Y);
             Point transfPoint2 = new Point((int)newPoint2[0] + center.X, (int)newPoint2[1] + center.Y);
 
-            return new Square(transfPoint, transfPoint2);
+            return new Square(transfPoint, transfPoint2, 0);
         }
 
     }

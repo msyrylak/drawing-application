@@ -34,6 +34,7 @@ namespace CGP_Assignment
         //private bool transformShape = false;
         private bool moveShape = false;
         private bool rotateShape = false;
+        float totalAngle = 0.0f;
 
         private PointF mDown;
         private PointF mMove;
@@ -163,6 +164,10 @@ namespace CGP_Assignment
         private void rotateItem(object sender, EventArgs e)
         {
             rotateShape = true;
+            moveShape = false;
+            selectShape = false;
+            createShape = ShapeSelected.NONE;
+
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -209,11 +214,8 @@ namespace CGP_Assignment
             }
         }
 
-        private float StartAngle;
-        private float CurrentAngle;
-        private float TotalAngle;
-        private bool DragInProgress;
-
+        float rotationAngle = 0;
+        double startAngle;
 
         // draw shapes using rubber banding
         protected override void OnMouseMove(MouseEventArgs e)
@@ -230,17 +232,17 @@ namespace CGP_Assignment
                 switch (createShape)
                 {
                     case ShapeSelected.SQUARE:
-                        Square square = new Square(mDown, mMove);
+                        Square square = new Square(mDown, mMove, totalAngle);
                         square.draw(g, blackpen);
                         break;
 
                     case ShapeSelected.TRIANGLE:
-                        Triangle triangle = new Triangle(mDown, mMove);
+                        Triangle triangle = new Triangle(mDown, mMove, totalAngle);
                         triangle.draw(g, blackpen);
                         break;
 
                     case ShapeSelected.CIRCLE:
-                        Circle circle = new Circle(mDown, mMove);
+                        Circle circle = new Circle(mDown, mMove, totalAngle);
                         circle.draw(g, blackpen);
                         break;
 
@@ -255,24 +257,16 @@ namespace CGP_Assignment
                         }
                         else if (rotateShape == true && selectedShape != null)
                         {
-                            // Get the angle from horizontal to the
-                            // vector between the center and the current point.
-                            float dx = e.X - ((selectedShape.End.X + selectedShape.Start.X) / 2);
-                            float dy = e.Y - ((selectedShape.End.Y + selectedShape.Start.Y) / 2);
-                            float new_angle = (float)Math.Atan2(dy, dx);
 
-                            // Calculate the change in angle.
-                            CurrentAngle = new_angle - StartAngle;
+                            float dx1 = e.X - ((selectedShape.Start.X + selectedShape.End.X) / 2);
+                            float dy1 = e.Y - ((selectedShape.Start.Y + selectedShape.End.Y) / 2);
+                            double newAngle = Math.Atan2(dy1, dx1);
 
-                            // Convert to degrees.
-                            CurrentAngle *= 180 / (float)Math.PI;
+                            rotationAngle = (float)(newAngle - startAngle);
 
-                            // Add to the previous total angle rotated.
-                            CurrentAngle += TotalAngle;
+                            rotationAngle *= (float)(180 / Math.PI);
 
-                            selectedShape.Rotate(CurrentAngle);
-                            //Refresh();
-                            //rotateShape = false;
+                            selectedShape.RotationAngle = rotationAngle;
                         }
                         break;
 
@@ -300,22 +294,18 @@ namespace CGP_Assignment
                             EndShapePoint = selectedShape.End,
                             StartMoveMousePoint = e.Location
                         };
+
+                        float dx = e.X - ((selectedShape.Start.X + selectedShape.End.X)/2);
+                        float dy = e.Y - ((selectedShape.Start.Y + selectedShape.End.Y) / 2);
+                        startAngle = Math.Atan2(dy, dx);
+
                     }
                 }
             }
 
-            if (selectedShape != null)
-            {
-                // Get the initial angle from horizontal to the
-                // vector between the center and the drag start point.
-                DragInProgress = true;
-                float dx = e.X - ((selectedShape.End.X + selectedShape.Start.X) / 2);
-                float dy = e.Y - ((selectedShape.End.Y + selectedShape.Start.Y) / 2);
-                StartAngle = (float)Math.Atan2(dy, dx);
-            }
-
             mDown = e.Location;
             mMove = e.Location;
+
 
         }
 
@@ -326,10 +316,7 @@ namespace CGP_Assignment
 
             selectedShape = null;
             Moving = null;
-
-            DragInProgress = false;
-            // Save the new total angle of rotation.
-            TotalAngle = CurrentAngle;
+            totalAngle = rotationAngle;
 
             if (mDown.X != mMove.X && mDown.Y != mMove.Y)
             {
@@ -337,18 +324,18 @@ namespace CGP_Assignment
                 {
                     case ShapeSelected.SQUARE:
 
-                        Square square = new Square(mDown, mMove);
+                        Square square = new Square(mDown, mMove, totalAngle);
                         shapes.Add(square);
                         break;
 
                     case ShapeSelected.TRIANGLE:
 
-                        Triangle triangle = new Triangle(mDown, mMove);
+                        Triangle triangle = new Triangle(mDown, mMove, totalAngle);
                         shapes.Add(triangle);
                         break;
 
                     case ShapeSelected.CIRCLE:
-                        Circle circle = new Circle(mDown, mMove);
+                        Circle circle = new Circle(mDown, mMove, totalAngle);
                         shapes.Add(circle);
                         break;
 
