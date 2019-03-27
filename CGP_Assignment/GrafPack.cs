@@ -8,6 +8,7 @@ namespace CGP_Assignment
 {
     public partial class GrafPack : Form
     {
+        // enum to know which shape is currently being drawn/chosen
         enum ShapeSelected
         {
             NONE,
@@ -18,40 +19,53 @@ namespace CGP_Assignment
 
         public class MoveInfo
         {
-            //public Shape shape;
             public PointF StartShapePoint;
             public PointF EndShapePoint;
             public Point StartMoveMousePoint;
         }
 
-        Shape selectedShape = null;
-        MoveInfo Moving = null;
+        // shape that is currently chosen 
+        private  Shape selectedShape = null;
+        private MoveInfo Moving = null;
         private MainMenu mainMenu;
-        ContextMenu PopupMenu = new ContextMenu();
+        private TextBox txtAngle = new TextBox();
+        private Label lblAngle = new Label();
+        private ContextMenu PopupMenu = new ContextMenu();
         private ShapeSelected createShape = ShapeSelected.NONE;
+
+        // menu flags
         private bool selectShape = false;
         private bool deleteShape = false;
-        //private bool transformShape = false;
         private bool moveShape = false;
         private bool rotateShape = false;
-        float totalAngle = 0.0f;
+
+        // for rotation angle calculations
+        private float totalAngle = 0.0f;
+        private float rotationAngle = 0;
+        private float startAngle;
 
         private PointF mDown;
         private PointF mMove;
-        //private PointF movementStart;
 
-        Graphics g;
-        Pen blackpen = new Pen(Color.Black, 2);
+        private Graphics g;
+        private Pen blackpen = new Pen(Color.Black, 2);
 
         private List<Shape> shapes = new List<Shape>();
 
         public GrafPack()
         {
             InitializeComponent();
-            //this.DoubleBuffered = true;
             this.SetStyle(ControlStyles.ResizeRedraw, true);
             this.WindowState = FormWindowState.Maximized;
             this.BackColor = Color.White;
+            this.Controls.Add(txtAngle);
+            this.Controls.Add(lblAngle);
+
+            lblAngle.Text = "Rotation angle: ";
+            lblAngle.Location = new Point(this.Width - 80, 12);
+            txtAngle.Location = new Point(this.Width, 10);
+            txtAngle.Hide();
+            lblAngle.Hide();
 
             // The following approach uses menu items coupled with mouse clicks
             MainMenu mainMenu = new MainMenu();
@@ -79,16 +93,14 @@ namespace CGP_Assignment
 
             mainMenu.MenuItems.Add(createItem);
             mainMenu.MenuItems.Add(selectItem);
-            mainMenu.MenuItems.Add(rotateItem);
-            mainMenu.MenuItems.Add(moveItem);
             mainMenu.MenuItems.Add(exitItem);
             createItem.MenuItems.Add(squareItem);
             createItem.MenuItems.Add(triangleItem);
             createItem.MenuItems.Add(circleItem);
             PopupMenu.MenuItems.Add(transformItem);
             PopupMenu.MenuItems.Add(deleteItem);
-            //transformItem.MenuItems.Add(moveItem);
-            //transformItem.MenuItems.Add(rotateItem);
+            transformItem.MenuItems.Add(moveItem);
+            transformItem.MenuItems.Add(rotateItem);
 
             selectItem.Click += new System.EventHandler(this.shapeSelect);
             exitItem.Click += new System.EventHandler(this.selectExit);
@@ -96,7 +108,6 @@ namespace CGP_Assignment
             triangleItem.Click += new System.EventHandler(this.createTriangle);
             circleItem.Click += new System.EventHandler(this.createCircle);
             deleteItem.Click += new EventHandler(this.deleteItem);
-            //transformItem.Click += new EventHandler(this.transformItem);
             moveItem.Click += new EventHandler(this.moveItem);
             rotateItem.Click += new EventHandler(this.rotateItem);
 
@@ -172,7 +183,6 @@ namespace CGP_Assignment
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            base.OnPaint(e);
             //Bitmap offScr = new Bitmap(this.Width, this.Height);
 
             g = this.CreateGraphics();
@@ -184,9 +194,9 @@ namespace CGP_Assignment
                 var pen = new Pen(color, 2);
                 shape.draw(g, pen);
                 //g.DrawImage(offScr, 0, 0);
-
             }
         }
+
 
         // This method is quite important and detects all mouse clicks - other methods may need
         // to be implemented to detect other kinds of event handling eg keyboard presses.
@@ -200,8 +210,22 @@ namespace CGP_Assignment
                     {
                         if (shape.contains(e.Location))
                         {
+                            Refresh();
                             selectedShape = shape;
-                            //PopupMenu.Show(this, e.Location);
+                        }
+                    }
+                }
+            } else if (e.Button == MouseButtons.Right)
+            {
+                if (selectShape == true)
+                {
+                    foreach (var shape in shapes.ToArray())
+                    {
+                        if (shape.contains(e.Location))
+                        {
+                            Refresh();
+                            selectedShape = shape;
+                            PopupMenu.Show(this, e.Location);
                             if (deleteShape == true)
                             {
                                 shapes.Remove(shape);
@@ -214,16 +238,11 @@ namespace CGP_Assignment
             }
         }
 
-        float rotationAngle = 0;
-        double startAngle;
 
         // draw shapes using rubber banding
         protected override void OnMouseMove(MouseEventArgs e)
         {
             g = this.CreateGraphics();
-
-            base.OnMouseMove(e);
-
             if (e.Button == MouseButtons.Left)
             {
                 mMove = e.Location;
@@ -257,16 +276,19 @@ namespace CGP_Assignment
                         }
                         else if (rotateShape == true && selectedShape != null)
                         {
-
+                            lblAngle.Show();
+                            txtAngle.Show();
                             float dx1 = e.X - ((selectedShape.Start.X + selectedShape.End.X) / 2);
                             float dy1 = e.Y - ((selectedShape.Start.Y + selectedShape.End.Y) / 2);
+
                             double newAngle = Math.Atan2(dy1, dx1);
 
                             rotationAngle = (float)(newAngle - startAngle);
 
-                            rotationAngle *= (float)(180 / Math.PI);
-
                             selectedShape.RotationAngle = rotationAngle;
+
+                            txtAngle.Text = (rotationAngle*= (float)(180/Math.PI)).ToString("0.00") + "°";
+
                         }
                         break;
 
@@ -274,12 +296,12 @@ namespace CGP_Assignment
                         break;
                 }
             }
-
         }
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            base.OnMouseDown(e);
+            this.Capture = true;
+
             foreach (var shape in shapes.ToArray())
             {
                 if (shape.contains(e.Location))
@@ -295,9 +317,9 @@ namespace CGP_Assignment
                             StartMoveMousePoint = e.Location
                         };
 
-                        float dx = e.X - ((selectedShape.Start.X + selectedShape.End.X)/2);
+                        float dx = e.X - ((selectedShape.Start.X + selectedShape.End.X) / 2);
                         float dy = e.Y - ((selectedShape.Start.Y + selectedShape.End.Y) / 2);
-                        startAngle = Math.Atan2(dy, dx);
+                        startAngle = (float)Math.Atan2(dy, dx);
 
                     }
                 }
@@ -311,8 +333,7 @@ namespace CGP_Assignment
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            base.OnMouseUp(e);
-            g = this.CreateGraphics();
+            this.Capture = false;
 
             selectedShape = null;
             Moving = null;
