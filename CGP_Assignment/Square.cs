@@ -25,11 +25,17 @@ namespace CGP_Assignment
         // axis aligned bounding box
         public Rectangle aabb;
 
-        public Square(PointF startPoint, PointF endPoint, float rotationAngle)   // constructor
+        public Square()
+        {
+
+        }
+
+        public Square(PointF startPoint, PointF endPoint, float rotationAngle, float scaleFactor)   // constructor
         {
             this.Start = startPoint;
             this.End = endPoint;
             this.RotationAngle = rotationAngle;
+            this.ScaleFactor = scaleFactor;
         }
 
         // You will need a different draw method for each kind of shape. Note the square is drawn
@@ -43,6 +49,7 @@ namespace CGP_Assignment
             PointF newStart = new PointF(Start.X,Start.Y);
             PointF newEnd = new PointF(End.X, End.Y);
             this.Rotate(RotationAngle, ref newStart, ref newEnd);
+            this.Scale(ScaleFactor, ref newStart, ref newEnd);
 
             // calculate ranges and mid points
             xDiff = newEnd.X - newStart.X;
@@ -131,6 +138,65 @@ namespace CGP_Assignment
 
             newStart = new PointF(newPointKey[0] + xMid, newPointKey[1] + yMid);
             newEnd = new PointF(newPointOpp[0] + xMid, newPointOpp[1] + yMid);
+        }
+
+        public override void Scale(float scaleFactor, ref PointF newStart, ref PointF newEnd)
+        {
+            // generate identity matrix
+            //matrix[0, 0] = 1.0f;
+            //matrix[0, 1] = 0.0f;
+            //matrix[0, 2] = 0.0f;
+            //matrix[1, 0] = 0.0f;
+            //matrix[1, 1] = 1.0f;
+            //matrix[1, 2] = 0.0f;
+            //matrix[2, 0] = 0.0f;
+            //matrix[2, 1] = 0.0f;
+            //matrix[2, 2] = 1.0f;
+
+
+            // prepare the scaling matrix
+            //matrix[0, 0] = scaleFactor;
+            ////matrix[0, 1] = scaleFactor;
+            ////matrix[1, 0] = scaleFactor;
+            //matrix[1, 1] = scaleFactor;
+
+
+            float xMid = (End.X + Start.X) / 2;
+            float yMid = (End.Y + Start.Y) / 2;
+
+            float[] point1 = new float[2] { (int)(Start.X - xMid), (int)(Start.Y - yMid) };
+            point1[0] *= ScaleFactor;
+            point1[1] *= ScaleFactor;
+            float[] point2 = new float[2] { (int)(End.X - xMid), (int)(End.Y - yMid) };
+            point2[0] *= ScaleFactor;
+            point2[1] *= ScaleFactor;
+
+            //float[] newPointKey = new float[2];
+            //float[] newPointOpp = new float[2];
+
+
+            //for (int col = 0; col < 2; col++)
+            //{
+            //    newPointKey[col] = 0.0f;
+            //    for (int index = 0; index < 2; index++)
+            //    {
+            //        newPointKey[col] += point1[index] * matrix[index, col];
+            //    }
+            //}
+
+            //for (int col = 0; col < 2; col++)
+            //{
+            //    newPointOpp[col] = 0.0f;
+            //    for (int index = 0; index < 2; index++)
+            //    {
+            //        newPointOpp[col] += point2[index] * matrix[index, col];
+            //    }
+            //}
+
+            //newStart = new PointF(newPointKey[0] + xMid, newPointKey[1] + yMid);
+            //newEnd = new PointF(newPointOpp[0] + xMid, newPointOpp[1] + yMid);
+            newStart = new PointF(xMid + point1[0], yMid + point1[1]);
+            newEnd = new PointF(xMid + point2[0], yMid + point2[1]);
         }
 
         public override bool contains(Point point)

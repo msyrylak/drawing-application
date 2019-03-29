@@ -11,6 +11,11 @@ namespace CGP_Assignment
     {
         double radius;
 
+        public Circle()
+        {
+
+        }
+
         public Circle(PointF start, PointF end, float rotation)
         {
             Start = start;

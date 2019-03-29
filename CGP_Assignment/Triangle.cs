@@ -17,6 +17,11 @@ namespace CGP_Assignment
        // public Point startPoint, endPoint;
         public Rectangle aabb;
 
+        public Triangle()
+        {
+
+        }
+
         public Triangle(PointF start, PointF end, float rotation)
         {
             this.Start = start;
