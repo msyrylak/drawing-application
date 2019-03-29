@@ -22,11 +22,12 @@ namespace CGP_Assignment
 
         }
 
-        public Triangle(PointF start, PointF end, float rotation)
+        public Triangle(PointF start, PointF end, float rotation, float scaleFactor)
         {
             this.Start = start;
             this.End = end;
             this.RotationAngle = rotation;
+            this.ScaleFactor = scaleFactor;
         }
 
         public override void draw(Graphics g, Pen blackPen)
@@ -36,7 +37,7 @@ namespace CGP_Assignment
 
             PointF newStart = new PointF(Start.X, Start.Y);
             PointF newEnd = new PointF(End.X, End.Y);
-            this.Rotate(RotationAngle, ref newStart, ref newEnd);
+            this.Transform(RotationAngle, ref newStart, ref newEnd);
 
             // calculate ranges and mid points
             xDiff = newEnd.X - newStart.X;
@@ -71,7 +72,7 @@ namespace CGP_Assignment
         }
 
 
-        public override void Rotate(double angle, ref PointF newStart, ref PointF newEnd)
+        public override void Transform(double angle, ref PointF newStart, ref PointF newEnd)
         {
             // generate identity matrix
             matrix[0, 0] = 1.0f;
@@ -86,19 +87,25 @@ namespace CGP_Assignment
 
 
             // prepare the rotation matrix
-            float cos = (float)Math.Cos(angle);
-            float sin = (float)Math.Sin(angle);
-            matrix[0, 0] = cos;
-            matrix[0, 1] = sin;
-            matrix[1, 0] = -sin;
-            matrix[1, 1] = cos;
+            float c = (float)Math.Cos(angle);
+            float s = (float)Math.Sin(angle);
+            matrix[0, 0] = c;
+            matrix[0, 1] = s;
+            matrix[1, 0] = -s;
+            matrix[1, 1] = c;
 
+            // scale first
             float xMid = (End.X + Start.X) / 2;
             float yMid = (End.Y + Start.Y) / 2;
 
-            float[] point1 = new float[2] { (int)(Start.X - xMid), (int)(Start.Y - yMid) };
-            float[] point2 = new float[2] { (int)(End.X - xMid), (int)(End.Y - yMid) };
+            float[] vector1 = new float[2] { (int)(Start.X - xMid), (int)(Start.Y - yMid) };
+            vector1[0] *= ScaleFactor;
+            vector1[1] *= ScaleFactor;
+            float[] vector2 = new float[2] { (int)(End.X - xMid), (int)(End.Y - yMid) };
+            vector2[0] *= ScaleFactor;
+            vector2[1] *= ScaleFactor;
 
+            // then rotate
             float[] newPointKey = new float[2];
             float[] newPointOpp = new float[2];
 
@@ -108,7 +115,7 @@ namespace CGP_Assignment
                 newPointKey[col] = 0.0f;
                 for (int index = 0; index < 2; index++)
                 {
-                    newPointKey[col] += point1[index] * matrix[index, col];
+                    newPointKey[col] += vector1[index] * matrix[index, col];
                 }
             }
 
@@ -117,7 +124,7 @@ namespace CGP_Assignment
                 newPointOpp[col] = 0.0f;
                 for (int index = 0; index < 2; index++)
                 {
-                    newPointOpp[col] += point2[index] * matrix[index, col];
+                    newPointOpp[col] += vector2[index] * matrix[index, col];
                 }
             }
 
