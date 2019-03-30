@@ -17,14 +17,19 @@ namespace CGP_Assignment
             CIRCLE
         }
 
+        // shapes to draw
+        Square square = null;
+        Circle circle = null;
+        Triangle triangle = null;
+
         private Shape selectedShape = null; // shape that is currently chosen 
         PointF shapeStartPt;
         PointF shapeEndPt;
-        //private MoveInfo Moving = null; // object to hold moving info
         private MainMenu mainMenu;
         private TextBox txtAngle = new TextBox(); // text box and a label to show the angle of rotation
         private Label lblAngle = new Label(); //
         private ContextMenuStrip PopupMenu = new ContextMenuStrip();  // popupmenu to interact with the shapes upon right mouse button click
+        private ContextMenuStrip CreatePopupMenu = new ContextMenuStrip();
         private CreateShape createShape = CreateShape.NONE; // TODO reset after finished drawing
 
         // menu flags
@@ -32,6 +37,8 @@ namespace CGP_Assignment
         private bool rotateShape = false;
         private bool scaleShape = false;
 
+        // flag to check if rubber banding is in process
+        private bool rubberBanding = false;
 
         // for rotation angle calculations
         private float angle = 0.0f;
@@ -42,7 +49,7 @@ namespace CGP_Assignment
         private float scale = 1.0f;
 
 
-        private PointF mouseDown; 
+        private PointF mouseDown;
         private PointF mouseMove;
 
         private Graphics g;
@@ -66,36 +73,35 @@ namespace CGP_Assignment
             txtAngle.Hide();
             lblAngle.Hide();
 
-            // The following approach uses menu items coupled with mouse clicks (TODO - see if i can do it differently)
+            // The following approach uses menu items coupled with mouse clicks
             MainMenu mainMenu = new MainMenu();
-            MenuItem createItem = new MenuItem();
-            MenuItem exitItem = new MenuItem();
-            MenuItem squareItem = new MenuItem();
-            MenuItem triangleItem = new MenuItem();
-            MenuItem circleItem = new MenuItem();
-            ToolStripMenuItem deleteItem = new ToolStripMenuItem();
-            ToolStripMenuItem moveItem = new ToolStripMenuItem();
-            ToolStripMenuItem rotateItem = new ToolStripMenuItem();
-            ToolStripMenuItem scaleItem = new ToolStripMenuItem();
-
-            createItem.Text = "&Create";
-            squareItem.Text = "&Square";
-            triangleItem.Text = "&Triangle";
-            circleItem.Text = "&Circle";
-            exitItem.Text = "&Exit";
-            deleteItem.Text = "&Delete";
-            moveItem.Text = "&Move";
-            rotateItem.Text = "&Rotate";
-            scaleItem.Text = "&Scale";
+            MenuItem createItem = new MenuItem("Create");
+            MenuItem exitItem = new MenuItem("Exit");
+            MenuItem squareItem = new MenuItem("Square");
+            MenuItem triangleItem = new MenuItem("Triangle");
+            MenuItem circleItem = new MenuItem("Circle");
+            MenuItem helpItem = new MenuItem("Help");
+            ToolStripMenuItem deleteItem = new ToolStripMenuItem("Delete");
+            ToolStripMenuItem moveItem = new ToolStripMenuItem("Move");
+            ToolStripMenuItem rotateItem = new ToolStripMenuItem("Rotate");
+            ToolStripMenuItem scaleItem = new ToolStripMenuItem("Scale");
+            ToolStripMenuItem createPopUp = new ToolStripMenuItem("Create");
+            ToolStripMenuItem squarePopUp = new ToolStripMenuItem("Square");
+            ToolStripMenuItem trianglePopUp = new ToolStripMenuItem("Triangle");
+            ToolStripMenuItem circlePopUp = new ToolStripMenuItem("Circle");
 
             mainMenu.MenuItems.Add(createItem);
+            mainMenu.MenuItems.Add(helpItem);
             mainMenu.MenuItems.Add(exitItem);
             createItem.MenuItems.Add(squareItem);
             createItem.MenuItems.Add(triangleItem);
             createItem.MenuItems.Add(circleItem);
             PopupMenu.Items.AddRange(new ToolStripItem[] { moveItem, rotateItem, scaleItem, deleteItem });
+            CreatePopupMenu.Items.Add(createPopUp);
+            createPopUp.DropDownItems.AddRange(new ToolStripItem[] { squarePopUp, trianglePopUp, circlePopUp});
 
-            exitItem.Click += new System.EventHandler(this.selectExit); // maybe esc?
+            helpItem.Click += new System.EventHandler(this.DisplayInstructions);
+            exitItem.Click += new System.EventHandler(this.selectExit); 
             squareItem.Click += new System.EventHandler(this.createSquare);
             triangleItem.Click += new System.EventHandler(this.createTriangle);
             circleItem.Click += new System.EventHandler(this.createCircle);
@@ -106,31 +112,65 @@ namespace CGP_Assignment
             rotateItem.Click += new EventHandler(this.rotateItem);
             scaleItem.Click += new EventHandler(this.scaleItem);
 
+            // popup create options
+            squarePopUp.Click += new System.EventHandler(this.createSquare);
+            trianglePopUp.Click += new System.EventHandler(this.createTriangle);
+            circlePopUp.Click += new System.EventHandler(this.createCircle);
+
 
             this.Menu = mainMenu;
-            this.MouseClick += mouseClick; // not needed?
+        }
+
+        // display instructions when program first runs
+        protected override void OnShown(EventArgs e)
+        {
+            DisplayInstructions(this, e);
+        }
+
+        // Generally, all methods of the form are usually private
+        private void DisplayInstructions(object sender, EventArgs e)
+        {
+            string Instructions = "Instructions:\n\n" +
+                "1. To create a shape choose one from the \"Create\" tab, press left mouse button and drag the mouse across the screen.\n\n" +
+                "2. To select any of the shapes drawn on the screen, click on it with the left mouse button.\n\n" +
+                "3. To perform any action on the shape right click to open a Pop Up menu. \n\n" +
+                "3a. \"Move\" - click anywhere inside the shape and drag the mouse around to move the shape.\n\n" +
+                "3b \"Rotate\" - drag the mouse around to rotate the shape.\n\n" +
+                "3c. \"Scale\" - drag the mouse further from the shape to make it bigger and closer to the shape to make it smaller.\n\n" +
+                "3d. \"Delete\" - remove the shape from the screen.\n\n" +
+                "4. You can also right click in any place on the screen to create a new shape.\n\n " +
+                "You can access these instructions under the \"Help\" tab.";
+
+            MessageBox.Show(Instructions);
         }
 
 
-        // Generally, all methods of the form are usually private
+        private void SetFlags(bool move, bool scale, bool rotate)
+        {
+            moveShape = move;
+            scaleShape = scale;
+            rotateShape = rotate;
+        }
+
+
         private void createSquare(object sender, EventArgs e)
         {
+            SetFlags(false, false, false);
             createShape = CreateShape.SQUARE;
-            MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a square.");
         }
 
 
         private void createTriangle(object sender, EventArgs e)
         {
+            SetFlags(false, false, false);
             createShape = CreateShape.TRIANGLE;
-            MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a triangle.");
         }
 
 
         private void createCircle(object sender, EventArgs e)
         {
+            SetFlags(false, false, false);
             createShape = CreateShape.CIRCLE;
-            MessageBox.Show("Click OK and then click and drag the mouse across the screen to create a circle.");
         }
 
 
@@ -149,7 +189,8 @@ namespace CGP_Assignment
 
         private void deleteItem(object sender, EventArgs e)
         {
-            txtAngle.Hide(); // put in a func? TODO
+            SetFlags(false, false, false);
+            txtAngle.Hide(); 
             lblAngle.Hide();
             shapes.Remove(selectedShape);
             selectedShape = null;
@@ -161,9 +202,8 @@ namespace CGP_Assignment
         {
             txtAngle.Hide();
             lblAngle.Hide();
-            scaleShape = true;
-            moveShape = false;
-            rotateShape = false;
+            SetFlags(false, true, false);
+            createShape = CreateShape.NONE;
         }
 
 
@@ -171,27 +211,42 @@ namespace CGP_Assignment
         {
             txtAngle.Hide();
             lblAngle.Hide();
-
-            moveShape = true;
-            rotateShape = false;
+            SetFlags(true, false, false);
             createShape = CreateShape.NONE;
         }
 
 
         private void rotateItem(object sender, EventArgs e)
         {
-            rotateShape = true;
-            moveShape = false;
+            SetFlags(false, false, true);
             createShape = CreateShape.NONE;
         }
 
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            //Bitmap offScr = new Bitmap(this.Width, this.Height);
-
             g = this.CreateGraphics();
-            //Graphics g2 = Graphics.FromImage(offScr);
+
+            if (rubberBanding == true)
+            {
+                switch (createShape)
+                {
+                    case CreateShape.SQUARE:
+                        square.draw(g, pen);
+                        break;
+
+                    case CreateShape.TRIANGLE:
+                        triangle.draw(g, pen);
+                        break;
+
+                    case CreateShape.CIRCLE:
+                        circle.draw(g, pen);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
 
             foreach (var shape in shapes)
             {
@@ -202,18 +257,32 @@ namespace CGP_Assignment
         }
 
 
-        // This method is quite important and detects all mouse clicks - other methods may need
-        // to be implemented to detect other kinds of event handling eg keyboard presses.
-        private void mouseClick(object sender, MouseEventArgs e)
-        {
-        }
-
-
         protected override void OnMouseDown(MouseEventArgs e)
         {
             this.Capture = true;
             mouseDown = e.Location;
             mouseMove = e.Location;
+            rubberBanding = !rubberBanding;
+
+            switch (createShape)
+            {
+                case CreateShape.SQUARE:
+
+                    square = new Square(mouseDown, mouseMove, angle, scale);
+                    break;
+
+                case CreateShape.TRIANGLE:
+
+                    triangle = new Triangle(mouseDown, mouseMove, angle, scale);
+                    break;
+
+                case CreateShape.CIRCLE:
+                    circle = new Circle(mouseDown, mouseMove, angle, scale);
+                    break;
+
+                default:
+                    break;
+            }
 
             if (e.Button == MouseButtons.Left)
             {
@@ -222,10 +291,9 @@ namespace CGP_Assignment
                     if (shape.contains(e.Location))
                     {
                         createShape = CreateShape.NONE;
-
                         selectedShape = shape;
                         Refresh();
-                        if (selectedShape != null) // && Moving == null)
+                        if (selectedShape != null)
                         {
                             shapeStartPt = new PointF(selectedShape.Start.X, selectedShape.Start.Y);
                             shapeEndPt = new PointF(selectedShape.End.X, selectedShape.End.Y);
@@ -239,18 +307,29 @@ namespace CGP_Assignment
             }
             if (e.Button == MouseButtons.Right)
             {
-                PopupMenu.Show(this, e.Location);
-
-                foreach (var shape in shapes.ToArray())
+                if (shapes.Count != 0)
                 {
-                    if (shape.contains(e.Location))
+                    foreach (var shape in shapes.ToArray())
                     {
-                        selectedShape = shape;
-                        Refresh();
+                        if (shape.contains(e.Location))
+                        {
+                            selectedShape = shape;
+                            PopupMenu.Show(this, e.Location);
+                        }
+                        else if(selectedShape == null || selectedShape.contains(e.Location) == false)
+                        {
+                            CreatePopupMenu.Show(this, e.Location);
+                        }
                     }
                 }
+                else
+                {
+                    CreatePopupMenu.Show(this, e.Location);
+                }
             }
+            Invalidate();
         }
+
 
         // draw shapes using rubber banding
         protected override void OnMouseMove(MouseEventArgs e)
@@ -259,68 +338,73 @@ namespace CGP_Assignment
             g = this.CreateGraphics();
             if (e.Button == MouseButtons.Left)
             {
-                mouseMove = e.Location;
-
-                Refresh();
-                switch (createShape)
+                if (rubberBanding)
                 {
-                    case CreateShape.SQUARE:
-                        Square square = new Square(mouseDown, mouseMove, angle, scale);
-                        square.draw(g, pen);
-                        //this.Invalidate(square);
-                        break;
+                    mouseMove = e.Location;
 
-                    case CreateShape.TRIANGLE:
-                        Triangle triangle = new Triangle(mouseDown, mouseMove, angle, scale);
-                        triangle.draw(g, pen);
-                        break;
+                    Invalidate();
+                    switch (createShape)
+                    {
+                        case CreateShape.SQUARE:
+                            square.Start = mouseDown;
+                            square.End = mouseMove;
+                            break;
 
-                    case CreateShape.CIRCLE:
-                        Circle circle = new Circle(mouseDown, mouseMove, angle, scale);
-                        circle.draw(g, pen);
-                        break;
+                        case CreateShape.TRIANGLE:
+                            triangle.Start = mouseDown;
+                            triangle.End = mouseMove;
+                            break;
 
-                    case CreateShape.NONE:
-                        if (moveShape == true && selectedShape != null)
-                        {
-                            selectedShape.Start = new PointF(shapeStartPt.X + e.X - mouseDown.X, shapeStartPt.Y + e.Y - mouseDown.Y);
-                            selectedShape.End = new PointF(shapeEndPt.X + e.X - mouseDown.X, shapeEndPt.Y + e.Y - mouseDown.Y);
-                        }
-                        if (rotateShape == true && selectedShape != null)
-                        {
-                            lblAngle.Show();
-                            txtAngle.Show();
-                            float dx1 = e.X - ((selectedShape.Start.X + selectedShape.End.X) / 2);
-                            float dy1 = e.Y - ((selectedShape.Start.Y + selectedShape.End.Y) / 2);
+                        case CreateShape.CIRCLE:
+                            circle.Start = mouseDown;
+                            circle.End = mouseMove;
+                            break;
 
-                            double newAngle = Math.Atan2(dy1, dx1);
+                        case CreateShape.NONE:
 
-                            rotationAngle = (float)(newAngle - startAngle);
+                            if (moveShape == true && selectedShape != null)
+                            {
+                                selectedShape.Start = new PointF(shapeStartPt.X + e.X - mouseDown.X, shapeStartPt.Y + e.Y - mouseDown.Y);
+                                selectedShape.End = new PointF(shapeEndPt.X + e.X - mouseDown.X, shapeEndPt.Y + e.Y - mouseDown.Y);
+                            }
 
-                            selectedShape.RotationAngle = rotationAngle;
+                            if (rotateShape == true && selectedShape != null)
+                            {
+                                lblAngle.Show();
+                                txtAngle.Show();
+                                float dx1 = e.X - ((selectedShape.Start.X + selectedShape.End.X) / 2);
+                                float dy1 = e.Y - ((selectedShape.Start.Y + selectedShape.End.Y) / 2);
 
-                            txtAngle.Text = (rotationAngle *= (float)(180 / Math.PI)).ToString("0.00") + "°";
+                                double newAngle = Math.Atan2(dy1, dx1);
 
-                        }
-                        if (scaleShape == true && selectedShape != null)
-                        {
-                            Shape shapeCopy = selectedShape;
+                                rotationAngle = (float)(newAngle - startAngle);
 
-                            // middle point
-                            float centerX = ((shapeCopy.Start.X + shapeCopy.End.X) / 2);
-                            float centerY = ((shapeCopy.End.Y + shapeCopy.End.Y) / 2);
+                                selectedShape.RotationAngle = rotationAngle;
 
-                            // original distance
-                            float ogDist = (float)Math.Sqrt(Math.Pow((double)(centerX - mouseDown.X), 2) + Math.Pow((double)(centerY - mouseDown.Y), 2));
-                            float currDist = (float)Math.Sqrt(Math.Pow((double)(centerX - e.X), 2) + Math.Pow((double)(centerY - e.Y), 2));
-                            scale = (currDist / ogDist);
+                                txtAngle.Text = (rotationAngle *= (float)(180 / Math.PI)).ToString("0.00") + "°";
 
-                            selectedShape.ScaleFactor = scale;
-                        }
-                        break;
+                            }
 
-                    default:
-                        break;
+                            if (scaleShape == true && selectedShape != null)
+                            {
+                                // middle point
+                                float centerX = ((selectedShape.Start.X + selectedShape.End.X) / 2);
+                                float centerY = ((selectedShape.End.Y + selectedShape.End.Y) / 2);
+
+                                // original distance
+                                float ogDist = (float)Math.Sqrt(Math.Pow((double)(centerX - mouseDown.X), 2) + Math.Pow((double)(centerY - mouseDown.Y), 2));
+                                float currDist = (float)Math.Sqrt(Math.Pow((double)(centerX - e.X), 2) + Math.Pow((double)(centerY - e.Y), 2));
+                                scale = (currDist / ogDist);
+
+                                selectedShape.ScaleFactor = scale;
+                            }
+
+                            break;
+
+                        default:
+                            break;
+                    }
+                    Invalidate();
                 }
             }
         }
@@ -329,27 +413,22 @@ namespace CGP_Assignment
         protected override void OnMouseUp(MouseEventArgs e)
         {
             this.Capture = false;
-            //Moving = null;
             angle = rotationAngle;
+            rubberBanding = !rubberBanding;
 
             if (mouseDown.X != mouseMove.X && mouseDown.Y != mouseMove.Y)
             {
                 switch (createShape)
                 {
                     case CreateShape.SQUARE:
-
-                        Square square = new Square(mouseDown, mouseMove, angle, scale);
                         shapes.Add(square);
                         break;
 
                     case CreateShape.TRIANGLE:
-
-                        Triangle triangle = new Triangle(mouseDown, mouseMove, angle, scale);
                         shapes.Add(triangle);
                         break;
 
                     case CreateShape.CIRCLE:
-                        Circle circle = new Circle(mouseDown, mouseMove, angle, scale);
                         shapes.Add(circle);
                         break;
 
