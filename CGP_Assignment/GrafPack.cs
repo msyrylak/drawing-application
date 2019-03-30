@@ -23,14 +23,14 @@ namespace CGP_Assignment
         Triangle triangle = null;
 
         private Shape selectedShape = null; // shape that is currently chosen 
-        PointF shapeStartPt;
-        PointF shapeEndPt;
-        private MainMenu mainMenu;
+        PointF selectedShapeStartPt;
+        PointF selectedShapeEndPt;
+
         private Label angleVal = new Label(); // text box and a label to show the angle of rotation
-        private Label lblAngle = new Label(); //
+        private Label lblAngle = new Label();
         private ContextMenuStrip PopupMenu = new ContextMenuStrip();  // popupmenu to interact with the shapes upon right mouse button click
         private ContextMenuStrip CreatePopupMenu = new ContextMenuStrip();
-        private CreateShape createShape = CreateShape.NONE; // TODO reset after finished drawing
+        private CreateShape createShape = CreateShape.NONE; 
 
         // menu flags
         private bool moveShape = false;
@@ -52,10 +52,12 @@ namespace CGP_Assignment
         private PointF mouseDown;
         private PointF mouseMove;
 
-        private Graphics g;
         private Pen pen = new Pen(Color.Black, 2);
 
         private List<Shape> shapes = new List<Shape>(); // list of shapes to be drawn
+
+        static bool manualDB = false;
+        Bitmap offScr;
 
         public GrafPack()
         {
@@ -63,6 +65,14 @@ namespace CGP_Assignment
             this.SetStyle(ControlStyles.ResizeRedraw, true);
             this.WindowState = FormWindowState.Maximized;
             this.BackColor = Color.White;
+            if(manualDB)
+            {
+                offScr = new Bitmap(this.Width, this.Height);
+            }
+            else
+            {
+                this.DoubleBuffered = true;
+            }
             this.Controls.Add(angleVal);
             this.Controls.Add(lblAngle);
 
@@ -230,7 +240,22 @@ namespace CGP_Assignment
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            g = this.CreateGraphics();
+            // implement double buffering
+            Graphics g = manualDB ? Graphics.FromImage(offScr) : e.Graphics;
+
+            if (manualDB)
+            {
+                g.Clear(Color.White);
+            }
+
+            // draw previously created shapes that are in the list
+            foreach (var shape in shapes)
+            {
+                // depending on whether the shape was clicked on (selected) assign the color of the pen
+                var color = shape == selectedShape ? Color.Red : Color.Black;
+                var pen = new Pen(color, 2);
+                shape.draw(g, pen);
+            }
 
             // if rubber banding is in process, draw shapes as they are being created
             if (rubberBanding == true)
@@ -253,19 +278,14 @@ namespace CGP_Assignment
                         break;
                 }
             }
-
-            // draw previously created shapes that are in a list
-            foreach (var shape in shapes)
+            if(manualDB)
             {
-                // depending whether the shape was clicked on (selected) assign the color of the pen
-                var color = shape == selectedShape ? Color.Red : Color.Black;
-                var pen = new Pen(color, 2);
-                shape.draw(g, pen);
+                e.Graphics.DrawImageUnscaled(offScr, 0, 0);
             }
         }
 
 
-        
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
             // track mouse position when down
@@ -309,12 +329,11 @@ namespace CGP_Assignment
                     {
                         createShape = CreateShape.NONE;
                         selectedShape = shape;
-                        Refresh();
                         if (selectedShape != null)
                         {
                             // record where the select shape has start and end points
-                            shapeStartPt = new PointF(selectedShape.Start.X, selectedShape.Start.Y);
-                            shapeEndPt = new PointF(selectedShape.End.X, selectedShape.End.Y);
+                            selectedShapeStartPt = new PointF(selectedShape.Start.X, selectedShape.Start.Y);
+                            selectedShapeEndPt = new PointF(selectedShape.End.X, selectedShape.End.Y);
 
                             // calculate starting angle for rotation
                             float dx = e.X - ((selectedShape.Start.X + selectedShape.End.X) / 2);
@@ -348,14 +367,13 @@ namespace CGP_Assignment
                     CreatePopupMenu.Show(this, e.Location);
                 }
             }
-            Invalidate();
+            //Invalidate();
         }
 
 
         // draw shapes using rubber banding
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            g = this.CreateGraphics();
             if (e.Button == MouseButtons.Left)
             {
                 if (rubberBanding)
@@ -388,8 +406,8 @@ namespace CGP_Assignment
                             // that means the user can perform actions on selected shape (move, rotate or scale)
                             if (moveShape == true && selectedShape != null)
                             {
-                                selectedShape.Start = new PointF(shapeStartPt.X + e.X - mouseDown.X, shapeStartPt.Y + e.Y - mouseDown.Y);
-                                selectedShape.End = new PointF(shapeEndPt.X + e.X - mouseDown.X, shapeEndPt.Y + e.Y - mouseDown.Y);
+                                selectedShape.Start = new PointF(selectedShapeStartPt.X + e.X - mouseDown.X, selectedShapeStartPt.Y + e.Y - mouseDown.Y);
+                                selectedShape.End = new PointF(selectedShapeEndPt.X + e.X - mouseDown.X, selectedShapeEndPt.Y + e.Y - mouseDown.Y);
                             }
 
                             if (rotateShape == true && selectedShape != null)

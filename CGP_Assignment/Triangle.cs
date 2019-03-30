@@ -12,8 +12,7 @@ namespace CGP_Assignment
         // rotation matrix
         static float[,] matrix = new float[3, 3] { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
 
-
-        public Rectangle aabb;
+        // points for the axis aligned bounding box
         PointF upperLeft = new PointF();
         PointF upperRight = new PointF();
         PointF lowerRight = new PointF();

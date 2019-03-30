@@ -9,11 +9,10 @@ namespace CGP_Assignment
 {
     class Square : Shape
     {
+        //This class contains the specific details for a square defined in terms of opposite corners
+
         // transformation matrix
         static float[,] matrix = new float[3, 3];
-
-
-        //This class contains the specific details for a square defined in terms of opposite corners
 
 
         // points for the axis aligned bounding box
@@ -78,7 +77,7 @@ namespace CGP_Assignment
             lowerRight = new PointF(minX + (maxX - minX), minY + (maxY - minY));
             lowerLeft = new PointF(minX, minY + (maxY - minY));
             
-            // create bounding box
+            // create bounding box (for debug purposes)
             //g.DrawLine(blackPen, upperLeft, upperRight);
             //g.DrawLine(blackPen, upperRight, lowerRight);
             //g.DrawLine(blackPen, lowerRight, lowerLeft);
@@ -87,26 +86,6 @@ namespace CGP_Assignment
 
         public override void Transform(double angle, ref PointF newStart, ref PointF newEnd)
         {
-            // generate identity matrix
-            matrix[0, 0] = 1.0f;
-            matrix[0, 1] = 0.0f;
-            matrix[0, 2] = 0.0f;
-            matrix[1, 0] = 0.0f;
-            matrix[1, 1] = 1.0f;
-            matrix[1, 2] = 0.0f;
-            matrix[2, 0] = 0.0f;
-            matrix[2, 1] = 0.0f;
-            matrix[2, 2] = 1.0f;
-
-
-            // prepare the rotation matrix
-            float cos = (float)Math.Cos(angle);
-            float sin = (float)Math.Sin(angle);
-            matrix[0, 0] = cos;
-            matrix[0, 1] = sin;
-            matrix[1, 0] = -sin;
-            matrix[1, 1] = cos;
-
             // scale first
             float xMid = (End.X + Start.X) / 2;
             float yMid = (End.Y + Start.Y) / 2;
@@ -120,10 +99,30 @@ namespace CGP_Assignment
             vector2[1] *= ScaleFactor;
 
             // then rotate
+
+            // generate identity matrix
+            matrix[0, 0] = 1.0f;
+            matrix[0, 1] = 0.0f;
+            matrix[0, 2] = 0.0f;
+            matrix[1, 0] = 0.0f;
+            matrix[1, 1] = 1.0f;
+            matrix[1, 2] = 0.0f;
+            matrix[2, 0] = 0.0f;
+            matrix[2, 1] = 0.0f;
+            matrix[2, 2] = 1.0f;
+
+            // prepare the rotation matrix
+            float cos = (float)Math.Cos(angle);
+            float sin = (float)Math.Sin(angle);
+            matrix[0, 0] = cos;
+            matrix[0, 1] = sin;
+            matrix[1, 0] = -sin;
+            matrix[1, 1] = cos;
+
+            // apply rotation matrix to the start and end points
             float[] newPointKey = new float[2];
             float[] newPointOpp = new float[2];
 
-            // apply rotation matrix to the start and end points
             for (int col = 0; col < 2; col++)
             {
                 newPointKey[col] = 0.0f;
