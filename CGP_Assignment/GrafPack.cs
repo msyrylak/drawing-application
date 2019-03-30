@@ -26,7 +26,7 @@ namespace CGP_Assignment
         PointF shapeStartPt;
         PointF shapeEndPt;
         private MainMenu mainMenu;
-        private TextBox txtAngle = new TextBox(); // text box and a label to show the angle of rotation
+        private Label angleVal = new Label(); // text box and a label to show the angle of rotation
         private Label lblAngle = new Label(); //
         private ContextMenuStrip PopupMenu = new ContextMenuStrip();  // popupmenu to interact with the shapes upon right mouse button click
         private ContextMenuStrip CreatePopupMenu = new ContextMenuStrip();
@@ -43,12 +43,12 @@ namespace CGP_Assignment
         // for rotation angle calculations
         private float angle = 0.0f;
         private float rotationAngle = 0.0f;
-        private float startAngle; // ?
+        private float startAngle; 
 
         // ratio for scaling
         private float scale = 1.0f;
 
-
+        // points to record mouse movement
         private PointF mouseDown;
         private PointF mouseMove;
 
@@ -63,17 +63,18 @@ namespace CGP_Assignment
             this.SetStyle(ControlStyles.ResizeRedraw, true);
             this.WindowState = FormWindowState.Maximized;
             this.BackColor = Color.White;
-            this.Controls.Add(txtAngle);
+            this.Controls.Add(angleVal);
             this.Controls.Add(lblAngle);
 
             // rotation angle info to display when rotating
             lblAngle.Text = "Rotation angle: ";
-            lblAngle.Location = new Point(this.Width - 80, 12);
-            txtAngle.Location = new Point(this.Width, 10);
-            txtAngle.Hide();
+            lblAngle.Location = new Point(this.Width + this.Height - 80, 7);
+            angleVal.Location = new Point(this.Width + this.Height, 7);
+            angleVal.Hide();
             lblAngle.Hide();
 
             // The following approach uses menu items coupled with mouse clicks
+            // main menu
             MainMenu mainMenu = new MainMenu();
             MenuItem createItem = new MenuItem("Create");
             MenuItem exitItem = new MenuItem("Exit");
@@ -81,6 +82,8 @@ namespace CGP_Assignment
             MenuItem triangleItem = new MenuItem("Triangle");
             MenuItem circleItem = new MenuItem("Circle");
             MenuItem helpItem = new MenuItem("Help");
+
+            // right click pop up menu
             ToolStripMenuItem deleteItem = new ToolStripMenuItem("Delete");
             ToolStripMenuItem moveItem = new ToolStripMenuItem("Move");
             ToolStripMenuItem rotateItem = new ToolStripMenuItem("Rotate");
@@ -121,6 +124,7 @@ namespace CGP_Assignment
             this.Menu = mainMenu;
         }
 
+
         // display instructions when program first runs
         protected override void OnShown(EventArgs e)
         {
@@ -133,7 +137,7 @@ namespace CGP_Assignment
             string Instructions = "Instructions:\n\n" +
                 "1. To create a shape choose one from the \"Create\" tab, press left mouse button and drag the mouse across the screen.\n\n" +
                 "2. To select any of the shapes drawn on the screen, click on it with the left mouse button.\n\n" +
-                "3. To perform any action on the shape right click to open a Pop Up menu. \n\n" +
+                "3. To perform any action on the shape right click to open a Pop-up menu. \n\n" +
                 "3a. \"Move\" - click anywhere inside the shape and drag the mouse around to move the shape.\n\n" +
                 "3b \"Rotate\" - drag the mouse around to rotate the shape.\n\n" +
                 "3c. \"Scale\" - drag the mouse further from the shape to make it bigger and closer to the shape to make it smaller.\n\n" +
@@ -145,6 +149,7 @@ namespace CGP_Assignment
         }
 
 
+        // sets functionality flags
         private void SetFlags(bool move, bool scale, bool rotate)
         {
             moveShape = move;
@@ -172,7 +177,7 @@ namespace CGP_Assignment
             SetFlags(false, false, false);
             createShape = CreateShape.CIRCLE;
         }
-
+        
 
         private void selectExit(object sender, EventArgs e)
         {
@@ -190,7 +195,7 @@ namespace CGP_Assignment
         private void deleteItem(object sender, EventArgs e)
         {
             SetFlags(false, false, false);
-            txtAngle.Hide(); 
+            angleVal.Hide(); 
             lblAngle.Hide();
             shapes.Remove(selectedShape);
             selectedShape = null;
@@ -200,7 +205,7 @@ namespace CGP_Assignment
 
         private void scaleItem(object sender, EventArgs e)
         {
-            txtAngle.Hide();
+            angleVal.Hide();
             lblAngle.Hide();
             SetFlags(false, true, false);
             createShape = CreateShape.NONE;
@@ -209,7 +214,7 @@ namespace CGP_Assignment
 
         private void moveItem(object sender, EventArgs e)
         {
-            txtAngle.Hide();
+            angleVal.Hide();
             lblAngle.Hide();
             SetFlags(true, false, false);
             createShape = CreateShape.NONE;
@@ -227,6 +232,7 @@ namespace CGP_Assignment
         {
             g = this.CreateGraphics();
 
+            // if rubber banding is in process, draw shapes as they are being created
             if (rubberBanding == true)
             {
                 switch (createShape)
@@ -248,8 +254,10 @@ namespace CGP_Assignment
                 }
             }
 
+            // draw previously created shapes that are in a list
             foreach (var shape in shapes)
             {
+                // depending whether the shape was clicked on (selected) assign the color of the pen
                 var color = shape == selectedShape ? Color.Red : Color.Black;
                 var pen = new Pen(color, 2);
                 shape.draw(g, pen);
@@ -257,13 +265,19 @@ namespace CGP_Assignment
         }
 
 
+        
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            // track mouse position when down
             this.Capture = true;
             mouseDown = e.Location;
             mouseMove = e.Location;
+
+            // reset rubberbanding flag
             rubberBanding = !rubberBanding;
 
+            // if any of the shapes is chosen to be drawn, create new shape object with 
+            // start and end points as well as angle for rotation and scaling factor
             switch (createShape)
             {
                 case CreateShape.SQUARE:
@@ -284,8 +298,11 @@ namespace CGP_Assignment
                     break;
             }
 
+
             if (e.Button == MouseButtons.Left)
             {
+                // if left mouse button has been pressed check if it clicked anywhere inside a shape
+                // from the shape list, if yes assign it to selectedShape object
                 foreach (var shape in shapes.ToArray())
                 {
                     if (shape.contains(e.Location))
@@ -295,9 +312,11 @@ namespace CGP_Assignment
                         Refresh();
                         if (selectedShape != null)
                         {
+                            // record where the select shape has start and end points
                             shapeStartPt = new PointF(selectedShape.Start.X, selectedShape.Start.Y);
                             shapeEndPt = new PointF(selectedShape.End.X, selectedShape.End.Y);
 
+                            // calculate starting angle for rotation
                             float dx = e.X - ((selectedShape.Start.X + selectedShape.End.X) / 2);
                             float dy = e.Y - ((selectedShape.Start.Y + selectedShape.End.Y) / 2);
                             startAngle = (float)Math.Atan2(dy, dx);
@@ -307,6 +326,8 @@ namespace CGP_Assignment
             }
             if (e.Button == MouseButtons.Right)
             {
+                // if right button has been pressed, show a context menu to perform any action the shape
+                // or if it was clicked somewhere else and not on any of the shapes, show context menu for shape creation
                 if (shapes.Count != 0)
                 {
                     foreach (var shape in shapes.ToArray())
@@ -334,12 +355,13 @@ namespace CGP_Assignment
         // draw shapes using rubber banding
         protected override void OnMouseMove(MouseEventArgs e)
         {
-            //TODO not draw here? 
             g = this.CreateGraphics();
             if (e.Button == MouseButtons.Left)
             {
                 if (rubberBanding)
                 {
+                    // if rubber banding is on, modify shapes start and end points according to the mouse movement location
+
                     mouseMove = e.Location;
 
                     Invalidate();
@@ -362,6 +384,8 @@ namespace CGP_Assignment
 
                         case CreateShape.NONE:
 
+                            // if none of the shapes is chosen for the creation, the enum switches to none
+                            // that means the user can perform actions on selected shape (move, rotate or scale)
                             if (moveShape == true && selectedShape != null)
                             {
                                 selectedShape.Start = new PointF(shapeStartPt.X + e.X - mouseDown.X, shapeStartPt.Y + e.Y - mouseDown.Y);
@@ -371,7 +395,7 @@ namespace CGP_Assignment
                             if (rotateShape == true && selectedShape != null)
                             {
                                 lblAngle.Show();
-                                txtAngle.Show();
+                                angleVal.Show();
                                 float dx1 = e.X - ((selectedShape.Start.X + selectedShape.End.X) / 2);
                                 float dy1 = e.Y - ((selectedShape.Start.Y + selectedShape.End.Y) / 2);
 
@@ -381,7 +405,7 @@ namespace CGP_Assignment
 
                                 selectedShape.RotationAngle = rotationAngle;
 
-                                txtAngle.Text = (rotationAngle *= (float)(180 / Math.PI)).ToString("0.00") + "°";
+                                angleVal.Text = (rotationAngle *= (float)(180 / Math.PI)).ToString("0.00") + "°";
 
                             }
 
@@ -391,9 +415,12 @@ namespace CGP_Assignment
                                 float centerX = ((selectedShape.Start.X + selectedShape.End.X) / 2);
                                 float centerY = ((selectedShape.End.Y + selectedShape.End.Y) / 2);
 
-                                // original distance
+                                // original distance from the center of the shape to mouse position
                                 float ogDist = (float)Math.Sqrt(Math.Pow((double)(centerX - mouseDown.X), 2) + Math.Pow((double)(centerY - mouseDown.Y), 2));
+                                // current distance
                                 float currDist = (float)Math.Sqrt(Math.Pow((double)(centerX - e.X), 2) + Math.Pow((double)(centerY - e.Y), 2));
+                                
+                                // calculate scale factor
                                 scale = (currDist / ogDist);
 
                                 selectedShape.ScaleFactor = scale;
@@ -413,9 +440,13 @@ namespace CGP_Assignment
         protected override void OnMouseUp(MouseEventArgs e)
         {
             this.Capture = false;
+            // save angle of last rotation
             angle = rotationAngle;
+
+            // reset rubber banding
             rubberBanding = !rubberBanding;
 
+            // if mouse postions between when it was first pressed and moved are different, add shapes to the list
             if (mouseDown.X != mouseMove.X && mouseDown.Y != mouseMove.Y)
             {
                 switch (createShape)
@@ -437,7 +468,6 @@ namespace CGP_Assignment
                 }
             }
         }
-
     }
 }
 

@@ -9,8 +9,7 @@ namespace CGP_Assignment
 {
     class Square : Shape
     {
-        // rotation matrix
-        //static float[,] matrix = new float[3, 3] { { 0.7071f, 0.7071f, 0.0f }, { -0.7071f, 0.7071f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
+        // transformation matrix
         static float[,] matrix = new float[3, 3];
 
 
@@ -25,10 +24,6 @@ namespace CGP_Assignment
         // axis aligned bounding box
         public Rectangle aabb;
 
-        public Square()
-        {
-
-        }
 
         public Square(PointF startPoint, PointF endPoint, float rotationAngle, float scaleFactor)   // constructor
         {
@@ -38,6 +33,7 @@ namespace CGP_Assignment
             this.RotationAngle = rotationAngle;
         }
 
+
         // You will need a different draw method for each kind of shape. Note the square is drawn
         // from first principles. All other shapes should similarly be drawn from first principles. 
         // Ideally no C# standard library class or method should be used to create, draw or transform a shape
@@ -46,10 +42,12 @@ namespace CGP_Assignment
         {
             // This method draws the square by calculating the positions of the other 2 corners
             double xDiff, yDiff, xMid, yMid;   // range and mid points of x & y  
+
+            // create copies of the start and end points to modify in transformations
             PointF newStart = new PointF(Start.X,Start.Y);
             PointF newEnd = new PointF(End.X, End.Y);
 
-            //this.Scale(ScaleFactor, ref newStart, ref newEnd);
+            // apply transformations 
             this.Transform(RotationAngle, ref newStart, ref newEnd);
 
             // calculate ranges and mid points
@@ -70,6 +68,7 @@ namespace CGP_Assignment
             g.DrawLine(blackPen, B, D);
             g.DrawLine(blackPen, D, A);
 
+            // TODO
             List<Point> points = new List<Point>();
             points.Add(new Point((int)Start.X, (int)Start.Y));
             points.Add(new Point((int)End.X, (int)End.Y));
@@ -101,17 +100,18 @@ namespace CGP_Assignment
 
 
             // prepare the rotation matrix
-            float c = (float)Math.Cos(angle);
-            float s = (float)Math.Sin(angle);
-            matrix[0, 0] = c;
-            matrix[0, 1] = s;
-            matrix[1, 0] = -s;
-            matrix[1, 1] = c;
+            float cos = (float)Math.Cos(angle);
+            float sin = (float)Math.Sin(angle);
+            matrix[0, 0] = cos;
+            matrix[0, 1] = sin;
+            matrix[1, 0] = -sin;
+            matrix[1, 1] = cos;
 
             // scale first
             float xMid = (End.X + Start.X) / 2;
             float yMid = (End.Y + Start.Y) / 2;
 
+            // multiply movement vector for start and end by the scale factor
             float[] vector1 = new float[2] { (int)(Start.X - xMid), (int)(Start.Y - yMid) };
             vector1[0] *= ScaleFactor;
             vector1[1] *= ScaleFactor;
@@ -123,7 +123,7 @@ namespace CGP_Assignment
             float[] newPointKey = new float[2];
             float[] newPointOpp = new float[2];
 
-
+            // apply rotation matrix to the start and end points
             for (int col = 0; col < 2; col++)
             {
                 newPointKey[col] = 0.0f;
