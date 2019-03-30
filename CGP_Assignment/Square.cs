@@ -14,16 +14,13 @@ namespace CGP_Assignment
 
 
         //This class contains the specific details for a square defined in terms of opposite corners
-        //public Point Start, End; // these points identify opposite corners of the square
 
-        PointF A = new PointF();
-        PointF B = new PointF();
-        PointF C = new PointF();
-        PointF D = new PointF();
-             
-        // axis aligned bounding box
-        public Rectangle aabb;
 
+        // points for the axis aligned bounding box
+        PointF upperLeft = new PointF();
+        PointF upperRight = new PointF();
+        PointF lowerRight = new PointF();
+        PointF lowerLeft  = new PointF();
 
         public Square(PointF startPoint, PointF endPoint, float rotationAngle, float scaleFactor)   // constructor
         {
@@ -56,19 +53,14 @@ namespace CGP_Assignment
             xMid = (newEnd.X + newStart.X) / 2;
             yMid = (newEnd.Y + newStart.Y) / 2;
 
-            A = new PointF(newStart.X, newStart.Y);
-            B = new PointF(newEnd.X, newEnd.Y);
-            C = new PointF((float)(xMid + yDiff / 2), (float)(yMid - xDiff / 2));
-            D = new PointF((float)(xMid - yDiff / 2), (float)(yMid + xDiff / 2));
-
 
             // draw square
-            g.DrawLine(blackPen, A, C);
-            g.DrawLine(blackPen, C, B);
-            g.DrawLine(blackPen, B, D);
-            g.DrawLine(blackPen, D, A);
+            g.DrawLine(blackPen, new PointF(newStart.X, newStart.Y), new PointF((float)(xMid + yDiff / 2), (float)(yMid - xDiff / 2)));
+            g.DrawLine(blackPen, new PointF((float)(xMid + yDiff / 2), (float)(yMid - xDiff / 2)), new PointF(newEnd.X, newEnd.Y));
+            g.DrawLine(blackPen, new PointF(newEnd.X, newEnd.Y), new PointF((float)(xMid - yDiff / 2), (float)(yMid + xDiff / 2)));
+            g.DrawLine(blackPen, new PointF((float)(xMid - yDiff / 2), (float)(yMid + xDiff / 2)), new PointF(newStart.X, newStart.Y));
 
-            // TODO
+            // put the square points in a list
             List<Point> points = new List<Point>();
             points.Add(new Point((int)Start.X, (int)Start.Y));
             points.Add(new Point((int)End.X, (int)End.Y));
@@ -80,9 +72,17 @@ namespace CGP_Assignment
             int minX = points.Min(p => p.X);
             int minY = points.Min(p => p.Y);
 
+            // calculate points for the aabb
+            upperLeft = new PointF(minX, minY);
+            upperRight = new PointF(minX + (maxX - minX), minY);
+            lowerRight = new PointF(minX + (maxX - minX), minY + (maxY - minY));
+            lowerLeft = new PointF(minX, minY + (maxY - minY));
+            
             // create bounding box
-            aabb = new Rectangle(new Point(minX, minY), new Size(maxX - minX, maxY - minY));
-            //g.DrawRectangle(blackPen, aabb);
+            //g.DrawLine(blackPen, upperLeft, upperRight);
+            //g.DrawLine(blackPen, upperRight, lowerRight);
+            //g.DrawLine(blackPen, lowerRight, lowerLeft);
+            //g.DrawLine(blackPen, lowerLeft, upperLeft);
         }
 
         public override void Transform(double angle, ref PointF newStart, ref PointF newEnd)
@@ -147,39 +147,17 @@ namespace CGP_Assignment
         }
 
 
+        // function to check if a point is inside the square or not
         public override bool contains(Point point)
         {
-            //float A1 = area(A.X, A.Y, B.X, B.Y, C.X, C.Y) + area(A.X, A.Y, D.X, D.Y, C.X, C.Y);
-            //float PAB = area(point.X, point.Y, A.X, A.Y, B.X, B.Y);
-            //float PBC = area(point.X, point.Y, B.X, B.Y, C.X, C.X);
-            //float PCD = area(point.X, point.Y, C.X, C.Y, D.X, D.Y);
-            //float PAD = area(point.X, point.Y, A.X, A.Y, D.X, D.Y);
+            float height = (float)Math.Sqrt(Math.Pow((lowerRight.Y - lowerLeft.Y), 2) + Math.Pow((lowerRight.X - lowerLeft.X), 2));
+            float width = (float)Math.Sqrt(Math.Pow((upperRight.Y - upperLeft.Y), 2) + Math.Pow((upperRight.X - upperLeft.X), 2));
 
-            //return (A1 == PAB + PBC + PCD + PAD);
-
-            /*public override bool IsInside(int mouseX, int mouseY) 
-            {
             return 
-            mouseX >= x && 
-            mouseX <= x + width &&
-            mouseY >= y &&
-            mouseY <= y + height;
-            */
-
-            base.contains(point);
-            return aabb.Contains(point);
-
-
+            point.X >= upperLeft.X && 
+            point.X <= upperLeft.X + width &&
+            point.Y >= upperLeft.Y &&
+            point.Y <= upperLeft.Y + height;
         }
-
-        static float area(int x1, int y1, int x2,
-               int y2, int x3, int y3)
-        {
-            return (float)Math.Abs((x1 * (y2 - y3) +
-                                    x2 * (y3 - y1) +
-                                    x3 * (y1 - y2)) / 2.0);
-        }
-
-
     }
 }

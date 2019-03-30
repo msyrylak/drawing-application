@@ -13,8 +13,11 @@ namespace CGP_Assignment
         static float[,] matrix = new float[3, 3] { { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f } };
 
 
-       // public Point startPoint, endPoint;
         public Rectangle aabb;
+        PointF upperLeft = new PointF();
+        PointF upperRight = new PointF();
+        PointF lowerRight = new PointF();
+        PointF lowerLeft = new PointF();
 
 
         public Triangle(PointF start, PointF end, float rotation, float scaleFactor)
@@ -59,14 +62,31 @@ namespace CGP_Assignment
             int minY = points.Min(p => p.Y);
 
             // create bounding box
-            aabb = new Rectangle(new Point(minX, minY), new Size(maxX - minX, maxY - minY));
-            //g.DrawRectangle(Pens.Aquamarine, aabb);
+            // calculate points for the aabb
+            upperLeft = new PointF(minX, minY);
+            upperRight = new PointF(minX + (maxX - minX), minY);
+            lowerRight = new PointF(minX + (maxX - minX), minY + (maxY - minY));
+            lowerLeft = new PointF(minX, minY + (maxY - minY));
+
+            //g.DrawLine(blackPen, upperLeft, upperRight);
+            //g.DrawLine(blackPen, upperRight, lowerRight);
+            //g.DrawLine(blackPen, lowerRight, lowerLeft);
+            //g.DrawLine(blackPen, lowerLeft, upperLeft);
+
         }
 
+
+        // function to check if a point is inside the triangle or not
         public override bool contains(Point point)
         {
-            base.contains(point);
-            return aabb.Contains(point);
+            float height = (float)Math.Sqrt(Math.Pow((lowerRight.Y - lowerLeft.Y), 2) + Math.Pow((lowerRight.X - lowerLeft.X), 2));
+            float width = (float)Math.Sqrt(Math.Pow((upperRight.Y - upperLeft.Y), 2) + Math.Pow((upperRight.X - upperLeft.X), 2));
+
+            return
+            point.X >= upperLeft.X &&
+            point.X <= upperLeft.X + width &&
+            point.Y >= upperLeft.Y &&
+            point.Y <= upperLeft.Y + height;
         }
 
 
