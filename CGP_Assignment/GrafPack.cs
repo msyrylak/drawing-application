@@ -30,7 +30,9 @@ namespace CGP_Assignment
         private Label lblAngle = new Label();
         private ContextMenuStrip PopupMenu = new ContextMenuStrip();  // popupmenu to interact with the shapes upon right mouse button click
         private ContextMenuStrip CreatePopupMenu = new ContextMenuStrip();
-        private CreateShape createShape = CreateShape.NONE; 
+        private CreateShape createShape = CreateShape.NONE;
+        MenuItem manualDBItem = new MenuItem("Manual Double Buffer");
+
 
         // menu flags
         private bool moveShape = false;
@@ -65,14 +67,6 @@ namespace CGP_Assignment
             this.SetStyle(ControlStyles.ResizeRedraw, true);
             this.WindowState = FormWindowState.Maximized;
             this.BackColor = Color.White;
-            if(manualDB)
-            {
-                offScr = new Bitmap(this.Width, this.Height);
-            }
-            else
-            {
-                this.DoubleBuffered = true;
-            }
             this.Controls.Add(angleVal);
             this.Controls.Add(lblAngle);
 
@@ -92,6 +86,9 @@ namespace CGP_Assignment
             MenuItem triangleItem = new MenuItem("Triangle");
             MenuItem circleItem = new MenuItem("Circle");
             MenuItem helpItem = new MenuItem("Help");
+            MenuItem optionsItem = new MenuItem("Options");
+
+
 
             // right click pop up menu
             ToolStripMenuItem deleteItem = new ToolStripMenuItem("Delete");
@@ -104,11 +101,13 @@ namespace CGP_Assignment
             ToolStripMenuItem circlePopUp = new ToolStripMenuItem("Circle");
 
             mainMenu.MenuItems.Add(createItem);
+            mainMenu.MenuItems.Add(optionsItem);
             mainMenu.MenuItems.Add(helpItem);
             mainMenu.MenuItems.Add(exitItem);
             createItem.MenuItems.Add(squareItem);
             createItem.MenuItems.Add(triangleItem);
             createItem.MenuItems.Add(circleItem);
+            optionsItem.MenuItems.Add(manualDBItem);
             PopupMenu.Items.AddRange(new ToolStripItem[] { moveItem, rotateItem, scaleItem, deleteItem });
             CreatePopupMenu.Items.Add(createPopUp);
             createPopUp.DropDownItems.AddRange(new ToolStripItem[] { squarePopUp, trianglePopUp, circlePopUp});
@@ -119,6 +118,7 @@ namespace CGP_Assignment
             triangleItem.Click += new System.EventHandler(this.createTriangle);
             circleItem.Click += new System.EventHandler(this.createCircle);
             deleteItem.Click += new EventHandler(this.deleteItem);
+            manualDBItem.Click += new EventHandler(this.manualDoubleBuffering);
 
             // shape transformation options
             moveItem.Click += new EventHandler(this.moveItem);
@@ -165,6 +165,16 @@ namespace CGP_Assignment
             moveShape = move;
             scaleShape = scale;
             rotateShape = rotate;
+        }
+
+        private void manualDoubleBuffering(object sender, EventArgs e)
+        {
+            if (sender == manualDBItem)
+            {
+                manualDBItem.Checked = true;
+                manualDB = true;
+            }
+
         }
 
 
@@ -240,13 +250,25 @@ namespace CGP_Assignment
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            // implement double buffering
-            Graphics g = manualDB ? Graphics.FromImage(offScr) : e.Graphics;
+            Graphics g;
 
             if (manualDB)
             {
+                this.DoubleBuffered = false;
+                offScr = new Bitmap(this.Width, this.Height);
+                g = Graphics.FromImage(offScr);
                 g.Clear(Color.White);
+
             }
+            else
+            {
+                this.DoubleBuffered = true;
+                g = e.Graphics;
+            }
+
+
+            // implement double buffering
+
 
             // draw previously created shapes that are in the list
             foreach (var shape in shapes)
