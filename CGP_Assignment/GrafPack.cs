@@ -31,13 +31,34 @@ namespace CGP_Assignment
         private ContextMenuStrip PopupMenu = new ContextMenuStrip();  // popupmenu to interact with the shapes upon right mouse button click
         private ContextMenuStrip CreatePopupMenu = new ContextMenuStrip();
         private CreateShape createShape = CreateShape.NONE;
-        MenuItem manualDBItem = new MenuItem("Manual Double Buffer");
+
+        // menu items
+        MenuItem manualDBItem;
+        MainMenu mainMenu;
+        MenuItem createItem;
+        MenuItem exitItem;
+        MenuItem squareItem;
+        MenuItem triangleItem;
+        MenuItem circleItem;
+        MenuItem helpItem;
+        MenuItem optionsItem;
+
+
+        // right click pop up menu
+        ToolStripMenuItem deleteItem;
+        ToolStripMenuItem moveItem;
+        ToolStripMenuItem rotateItem;
+        ToolStripMenuItem scaleItem;
+        ToolStripMenuItem createPopUp;
+        ToolStripMenuItem squarePopUp;
+        ToolStripMenuItem trianglePopUp;
+        ToolStripMenuItem circlePopUp;
 
 
         // menu flags
-        private bool moveShape = false;
-        private bool rotateShape = false;
-        private bool scaleShape = false;
+        private bool moveShapeFlag = false;
+        private bool rotateShapeFlag = false;
+        private bool scaleShapeFlag = false;
 
         // flag to check if rubber banding is in process
         private bool rubberBanding = false;
@@ -79,26 +100,26 @@ namespace CGP_Assignment
 
             // The following approach uses menu items coupled with mouse clicks
             // main menu
-            MainMenu mainMenu = new MainMenu();
-            MenuItem createItem = new MenuItem("Create");
-            MenuItem exitItem = new MenuItem("Exit");
-            MenuItem squareItem = new MenuItem("Square");
-            MenuItem triangleItem = new MenuItem("Triangle");
-            MenuItem circleItem = new MenuItem("Circle");
-            MenuItem helpItem = new MenuItem("Help");
-            MenuItem optionsItem = new MenuItem("Options");
-
+            mainMenu = new MainMenu();
+            createItem = new MenuItem("Create");
+            exitItem = new MenuItem("Exit");
+            squareItem = new MenuItem("Square");
+            triangleItem = new MenuItem("Triangle");
+            circleItem = new MenuItem("Circle");
+            helpItem = new MenuItem("Help");
+            optionsItem = new MenuItem("Options");
+            manualDBItem = new MenuItem("Manual Double Buffer");
 
 
             // right click pop up menu
-            ToolStripMenuItem deleteItem = new ToolStripMenuItem("Delete");
-            ToolStripMenuItem moveItem = new ToolStripMenuItem("Move");
-            ToolStripMenuItem rotateItem = new ToolStripMenuItem("Rotate");
-            ToolStripMenuItem scaleItem = new ToolStripMenuItem("Scale");
-            ToolStripMenuItem createPopUp = new ToolStripMenuItem("Create");
-            ToolStripMenuItem squarePopUp = new ToolStripMenuItem("Square");
-            ToolStripMenuItem trianglePopUp = new ToolStripMenuItem("Triangle");
-            ToolStripMenuItem circlePopUp = new ToolStripMenuItem("Circle");
+            deleteItem = new ToolStripMenuItem("Delete");
+            moveItem = new ToolStripMenuItem("Move");
+            rotateItem = new ToolStripMenuItem("Rotate");
+            scaleItem = new ToolStripMenuItem("Scale");
+            createPopUp = new ToolStripMenuItem("Create");
+            squarePopUp = new ToolStripMenuItem("Square");
+            trianglePopUp = new ToolStripMenuItem("Triangle");
+            circlePopUp = new ToolStripMenuItem("Circle");
 
             mainMenu.MenuItems.Add(createItem);
             mainMenu.MenuItems.Add(optionsItem);
@@ -117,13 +138,13 @@ namespace CGP_Assignment
             squareItem.Click += new System.EventHandler(this.createSquare);
             triangleItem.Click += new System.EventHandler(this.createTriangle);
             circleItem.Click += new System.EventHandler(this.createCircle);
-            deleteItem.Click += new EventHandler(this.deleteItem);
+            deleteItem.Click += new EventHandler(this.deleteShape);
             manualDBItem.Click += new EventHandler(this.manualDoubleBuffering);
 
             // shape transformation options
-            moveItem.Click += new EventHandler(this.moveItem);
-            rotateItem.Click += new EventHandler(this.rotateItem);
-            scaleItem.Click += new EventHandler(this.scaleItem);
+            moveItem.Click += new EventHandler(this.moveShape);
+            rotateItem.Click += new EventHandler(this.rotateShape);
+            scaleItem.Click += new EventHandler(this.scaleShape);
 
             // popup create options
             squarePopUp.Click += new System.EventHandler(this.createSquare);
@@ -162,9 +183,9 @@ namespace CGP_Assignment
         // sets functionality flags
         private void SetFlags(bool move, bool scale, bool rotate)
         {
-            moveShape = move;
-            scaleShape = scale;
-            rotateShape = rotate;
+            moveShapeFlag = move;
+            scaleShapeFlag = scale;
+            rotateShapeFlag = rotate;
         }
 
         private void manualDoubleBuffering(object sender, EventArgs e)
@@ -212,7 +233,7 @@ namespace CGP_Assignment
         }
 
 
-        private void deleteItem(object sender, EventArgs e)
+        private void deleteShape(object sender, EventArgs e)
         {
             SetFlags(false, false, false);
             angleVal.Hide(); 
@@ -223,7 +244,7 @@ namespace CGP_Assignment
         }
 
 
-        private void scaleItem(object sender, EventArgs e)
+        private void scaleShape(object sender, EventArgs e)
         {
             angleVal.Hide();
             lblAngle.Hide();
@@ -232,7 +253,7 @@ namespace CGP_Assignment
         }
 
 
-        private void moveItem(object sender, EventArgs e)
+        private void moveShape(object sender, EventArgs e)
         {
             angleVal.Hide();
             lblAngle.Hide();
@@ -241,7 +262,7 @@ namespace CGP_Assignment
         }
 
 
-        private void rotateItem(object sender, EventArgs e)
+        private void rotateShape(object sender, EventArgs e)
         {
             SetFlags(false, false, true);
             createShape = CreateShape.NONE;
@@ -254,6 +275,8 @@ namespace CGP_Assignment
 
             if (manualDB)
             {
+                // implement double buffering
+
                 this.DoubleBuffered = false;
                 offScr = new Bitmap(this.Width, this.Height);
                 g = Graphics.FromImage(offScr);
@@ -265,10 +288,6 @@ namespace CGP_Assignment
                 this.DoubleBuffered = true;
                 g = e.Graphics;
             }
-
-
-            // implement double buffering
-
 
             // draw previously created shapes that are in the list
             foreach (var shape in shapes)
@@ -389,7 +408,7 @@ namespace CGP_Assignment
                     CreatePopupMenu.Show(this, e.Location);
                 }
             }
-            //Invalidate();
+            Invalidate();
         }
 
 
@@ -426,13 +445,13 @@ namespace CGP_Assignment
 
                             // if none of the shapes is chosen for the creation, the enum switches to none
                             // that means the user can perform actions on selected shape (move, rotate or scale)
-                            if (moveShape == true && selectedShape != null)
+                            if (moveShapeFlag == true && selectedShape != null)
                             {
                                 selectedShape.Start = new PointF(selectedShapeStartPt.X + e.X - mouseDown.X, selectedShapeStartPt.Y + e.Y - mouseDown.Y);
                                 selectedShape.End = new PointF(selectedShapeEndPt.X + e.X - mouseDown.X, selectedShapeEndPt.Y + e.Y - mouseDown.Y);
                             }
 
-                            if (rotateShape == true && selectedShape != null)
+                            if (rotateShapeFlag == true && selectedShape != null)
                             {
                                 lblAngle.Show();
                                 angleVal.Show();
@@ -449,7 +468,7 @@ namespace CGP_Assignment
 
                             }
 
-                            if (scaleShape == true && selectedShape != null)
+                            if (scaleShapeFlag == true && selectedShape != null)
                             {
                                 // middle point
                                 float centerX = ((selectedShape.Start.X + selectedShape.End.X) / 2);

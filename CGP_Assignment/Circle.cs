@@ -10,6 +10,7 @@ namespace CGP_Assignment
     class Circle : Shape
     {
         double radius;
+        Point plotPt;
         static float[,] matrix = new float[3, 3];
 
         public Circle(PointF start, PointF end, float rotation, float scaleFactor)
@@ -18,7 +19,14 @@ namespace CGP_Assignment
             this.End = end;
             this.RotationAngle = rotation;
             this.ScaleFactor = scaleFactor;
+            this.plotPt = new Point(0, 0);
 
+        }
+
+
+        void putPixel(Graphics g, Point pixel, Brush brush)
+        {
+            g.FillRectangle(brush, pixel.X, pixel.Y, 2, 2);
         }
 
         public override void draw(Graphics g, Pen pen)
@@ -33,9 +41,55 @@ namespace CGP_Assignment
             // calculate circle's radius based on transformed points 
             radius = Math.Sqrt(Math.Pow((newEnd.Y - newStart.Y), 2) + Math.Pow((newEnd.X - newStart.X), 2));
 
+            Brush brush;
+            // check what colour is the pen sent (that indicates if the shape was selected/clicked on or not)
+            if (pen.Color == Color.Red)
+            {
+                brush = (Brush)Brushes.Red;
+            }
+            else
+            {
+                brush = (Brush)Brushes.Black;
+            }
+
+            int x = 0;
+            int y = (int)radius;
+            int d = 3 - 2 * (int)radius;
+            // initial value
+            while (x <= y){
+                // put pixel in each octant
+                plotPt.X = x + (int)newStart.X;
+                plotPt.Y = y + (int)newStart.Y;
+                putPixel(g, plotPt, brush);
+                plotPt.X = y + (int)newStart.X;
+                plotPt.Y = x + (int)newStart.Y;
+                putPixel(g, plotPt, brush);
+                plotPt.X = y + (int)newStart.X;
+                plotPt.Y = -x + (int)newStart.Y;
+                putPixel(g, plotPt, brush);
+                plotPt.X = x + (int)newStart.X;
+                plotPt.Y = -y + (int)newStart.Y;
+                putPixel(g, plotPt, brush);
+                plotPt.X = -x + (int)newStart.X;
+                plotPt.Y = -y + (int)newStart.Y;
+                putPixel(g, plotPt, brush);
+                plotPt.X = -y + (int)newStart.X;
+                plotPt.Y = -x + (int)newStart.Y;
+                putPixel(g, plotPt, brush);
+                plotPt.X = -y + (int)newStart.X;
+                plotPt.Y = x + (int)newStart.Y;
+                putPixel(g, plotPt, brush);
+                plotPt.X = -x + (int)newStart.X;
+                plotPt.Y = y + (int)newStart.Y;
+                putPixel(g, plotPt, brush);
+                // update d value
+                if (d <= 0){d = d + 4 * x + 6;}
+                else {d = d + 4 * (x - y) + 10;y--;}
+                x++;}
+
             // draw circle
-            g.DrawEllipse(pen, (float)(newStart.X - radius), (float)(newStart.Y - radius),
-                      (float)(radius + radius), (float)(radius + radius));
+           // g.DrawEllipse(pen, (float)(newStart.X - radius), (float)(newStart.Y - radius),
+             //         (float)(radius + radius), (float)(radius + radius));
         }
 
         public override void Transform(double angle, ref PointF newStart, ref PointF newEnd)
