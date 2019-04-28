@@ -66,7 +66,7 @@ namespace CGP_Assignment
         // for rotation angle calculations
         private float angle = 0.0f;
         private float rotationAngle = 0.0f;
-        private float startAngle; 
+        private float startAngle;
 
         // ratio for scaling
         private float scale = 1.0f;
@@ -131,10 +131,10 @@ namespace CGP_Assignment
             optionsItem.MenuItems.Add(manualDBItem);
             PopupMenu.Items.AddRange(new ToolStripItem[] { moveItem, rotateItem, scaleItem, deleteItem });
             CreatePopupMenu.Items.Add(createPopUp);
-            createPopUp.DropDownItems.AddRange(new ToolStripItem[] { squarePopUp, trianglePopUp, circlePopUp});
+            createPopUp.DropDownItems.AddRange(new ToolStripItem[] { squarePopUp, trianglePopUp, circlePopUp });
 
             helpItem.Click += new System.EventHandler(this.DisplayInstructions);
-            exitItem.Click += new System.EventHandler(this.selectExit); 
+            exitItem.Click += new System.EventHandler(this.selectExit);
             squareItem.Click += new System.EventHandler(this.createSquare);
             triangleItem.Click += new System.EventHandler(this.createTriangle);
             circleItem.Click += new System.EventHandler(this.createCircle);
@@ -190,10 +190,15 @@ namespace CGP_Assignment
 
         private void manualDoubleBuffering(object sender, EventArgs e)
         {
-            if (sender == manualDBItem)
+            if (manualDBItem.Checked == false)
             {
                 manualDBItem.Checked = true;
                 manualDB = true;
+            }
+            else if (manualDBItem.Checked == true)
+            {
+                manualDBItem.Checked = false;
+                manualDB = false;
             }
 
         }
@@ -218,7 +223,7 @@ namespace CGP_Assignment
             SetFlags(false, false, false);
             createShape = CreateShape.CIRCLE;
         }
-        
+
 
         private void selectExit(object sender, EventArgs e)
         {
@@ -236,7 +241,7 @@ namespace CGP_Assignment
         private void deleteShape(object sender, EventArgs e)
         {
             SetFlags(false, false, false);
-            angleVal.Hide(); 
+            angleVal.Hide();
             lblAngle.Hide();
             shapes.Remove(selectedShape);
             selectedShape = null;
@@ -319,7 +324,7 @@ namespace CGP_Assignment
                         break;
                 }
             }
-            if(manualDB)
+            if (manualDB)
             {
                 e.Graphics.DrawImageUnscaled(offScr, 0, 0);
             }
@@ -397,7 +402,7 @@ namespace CGP_Assignment
                             selectedShape = shape;
                             PopupMenu.Show(this, e.Location);
                         }
-                        else if(selectedShape == null || selectedShape.contains(e.Location) == false)
+                        else if (selectedShape == null || selectedShape.contains(e.Location) == false)
                         {
                             CreatePopupMenu.Show(this, e.Location);
                         }
@@ -478,7 +483,7 @@ namespace CGP_Assignment
                                 float ogDist = (float)Math.Sqrt(Math.Pow((double)(centerX - mouseDown.X), 2) + Math.Pow((double)(centerY - mouseDown.Y), 2));
                                 // current distance
                                 float currDist = (float)Math.Sqrt(Math.Pow((double)(centerX - e.X), 2) + Math.Pow((double)(centerY - e.Y), 2));
-                                
+
                                 // calculate scale factor
                                 scale = (currDist / ogDist);
 

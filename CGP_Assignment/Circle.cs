@@ -86,10 +86,6 @@ namespace CGP_Assignment
                 if (d <= 0){d = d + 4 * x + 6;}
                 else {d = d + 4 * (x - y) + 10;y--;}
                 x++;}
-
-            // draw circle
-           // g.DrawEllipse(pen, (float)(newStart.X - radius), (float)(newStart.Y - radius),
-             //         (float)(radius + radius), (float)(radius + radius));
         }
 
         public override void Transform(double angle, ref PointF newStart, ref PointF newEnd)
